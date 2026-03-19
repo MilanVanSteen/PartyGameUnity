@@ -8,7 +8,7 @@ using UnityEngine;
 public class SocketManager : MonoBehaviour
 {
     private SocketIOUnity socket;
-    private string roomCode;
+    private LobbyManager lobbyManager;
 
     void Awake()
     {
@@ -18,6 +18,8 @@ public class SocketManager : MonoBehaviour
     
     void Start()
     {
+        if (lobbyManager == null) lobbyManager = FindFirstObjectByType<LobbyManager>();
+
         var uri = new Uri("https://partygame-gwgre4gjebg9h0fk.germanywestcentral-01.azurewebsites.net/"); 
 
         // Initialize socket
@@ -30,6 +32,7 @@ public class SocketManager : MonoBehaviour
         // Listen for server events
         socket.On("PLAYER_JOINED", OnPlayerJoin);
         socket.On("ROOM_CREATED", OnRoomCreated);
+        socket.On("GAME_STARTED", OnGameStarted);
 
         // Connect
         socket.Connect();
@@ -40,33 +43,39 @@ public class SocketManager : MonoBehaviour
         };
     }
 
-    private void OnRoomCreated(SocketIOResponse response)
+    [Serializable]
+    private class RoomCodeRaw
     {
-        Debug.Log(response.GetValue().ToString());
+        public string roomCode;
     }
 
-    private class Player
+    private void OnRoomCreated(SocketIOResponse response)
     {
-        public string id;
-        public string name;
+        string rawJson = response.GetValue().ToString();
+        RoomCodeRaw roomCodeRaw = JsonConvert.DeserializeObject<RoomCodeRaw>(rawJson);
+
+        string roomCode = roomCodeRaw.roomCode;
+        Debug.Log("Room code: " + roomCode);
+
+        // Update UI
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            if (lobbyManager == null) lobbyManager = FindFirstObjectByType<LobbyManager>();
+            if (lobbyManager != null)
+            {
+                lobbyManager.SetRoomCode(roomCode);
+            }
+            else
+            {
+                Debug.LogWarning("No LobbyManager in this scene, skipping UI update");
+            }
+        });
     }
-    private class PlayerList
-    {
-        public Player[] players;
-    }
+
     private void OnPlayerJoin(SocketIOResponse response)
     {
         string rawJson = response.GetValue().ToString();
-        PlayerList data = null;
-        try
-        {
-            data = JsonConvert.DeserializeObject<PlayerList>(rawJson);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError("Failed to parse PLAYER_JOINED payload: " + e);
-            return;
-        }
+        PlayerList data = JsonConvert.DeserializeObject<PlayerList>(rawJson);
 
         // Playername null handling
         foreach (var p in data.players)
@@ -82,11 +91,47 @@ public class SocketManager : MonoBehaviour
         }
 
         // Pick the last player who joined to show
-        Player newPlayer = data.players[data.players.Length - 1];
-
+        WebPlayer newPlayer = data.players[data.players.Length - 1];
         Debug.Log($"Player joined: {newPlayer.name} ({newPlayer.id})");
 
+        // Update UI
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            if (lobbyManager != null)
+            {
+                lobbyManager.UpdatePlayers(data);
+            }
+            else
+            {
+                Debug.LogWarning("No LobbyManager in this scene, skipping UI update");
+            }
+        });
+
         // TODO: update your board/UI with the new player
+    }
+
+    public void StartGame()
+    {
+        Debug.Log("Start button pressed → sending START_GAME");
+        Debug.Log("Socket connected? " + socket.Connected);
+
+        socket.Emit("START_GAME", new { });
+    }
+
+    private void OnGameStarted(SocketIOResponse response)
+    {
+        Debug.Log("Game is starting!");
+
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            StartGameClient();
+        });
+    }
+    private void StartGameClient()
+    {
+        Debug.Log("Loading game scene...");
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene"); // Change to actual next scene later
     }
 
     // Call this method from your game (UI button, dice roll, etc.)
