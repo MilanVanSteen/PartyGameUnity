@@ -52,6 +52,7 @@ public class SocketManager : MonoBehaviour
         socket.On("PLAYER_JOINED", OnPlayerJoin);
         socket.On("ROOM_CREATED", OnRoomCreated);
         socket.On("GAME_STARTED", OnGameStarted);
+        socket.On("PLAYER_MOVE", OnPlayerMove);
 
         // Connect
         socket.Connect();
@@ -158,11 +159,49 @@ public class SocketManager : MonoBehaviour
         SceneManager.LoadScene("SampleScene"); // Change to actual next scene later
     }
 
-    // Call this method from your game (UI button, dice roll, etc.)
-    public void SendRollDice(string playerId, int rollValue)
+    [Serializable]
+    public class PlayerMove
     {
-        var data = new { playerId, roll = rollValue };
-        socket.Emit("roll-dice", data);
+        public string playerId;
+        public int roll;
+    }
+
+    [Serializable]
+    public class PlayerMoveList
+    {
+        public List<PlayerMove> moves;
+    }
+
+    public void TriggerDiceRoll()
+    {
+        if (socket != null && socket.Connected)
+        {
+            Debug.Log("Host triggering dice roll...");
+            socket.Emit("ROLL_DICE");
+        }
+        else
+        {
+            Debug.LogWarning("Socket not connected. Cannot roll dice.");
+        }
+    }
+
+    private void OnPlayerMove(SocketIOResponse response)
+    {
+        string rawJson = response.GetValue().ToString();
+        PlayerMoveList moveList = JsonConvert.DeserializeObject<PlayerMoveList>(rawJson);
+
+        Debug.Log("All dice rolls finished, moving players...");
+
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            foreach (var move in moveList.moves)
+            {
+                if (BoardManager.Instance.TryGetPlayer(move.playerId, out Player player))
+                {
+                    player.MoveSteps(move.roll); // Move the player in Unity
+                }
+            }
+        });
     }
 
     private void OnApplicationQuit()

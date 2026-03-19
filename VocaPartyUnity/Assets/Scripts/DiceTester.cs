@@ -2,15 +2,15 @@ using UnityEngine;
 
 public class DiceTester : MonoBehaviour
 {
-    private BoardManager BoardManager => BoardManager.Instance;
+    private SocketManager SocketManager => SocketManager.Instance;
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (BoardManager != null)
+            if (SocketManager != null)
             {
-                BoardManager.RollForAllPlayers();
+                SocketManager.TriggerDiceRoll();
             }
             else
             {

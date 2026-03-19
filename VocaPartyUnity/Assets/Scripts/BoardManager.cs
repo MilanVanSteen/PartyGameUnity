@@ -119,34 +119,39 @@ public class BoardManager : MonoBehaviour
         return player;
     }
     
-    public void RollForAllPlayers()
+    // public void RollForAllPlayers()
+    // {
+    //     playersMoving = 0;
+
+    //     foreach (Player player in players)
+    //     {
+    //         PlayerState playerState = player.GetComponent<PlayerState>();
+
+    //         if(!playerState.isMoving && playerState.CanPlayTurn())
+    //         {
+    //             // Shield handling
+    //             if(playerState.shieldTurns > 0)
+    //             {
+    //                 playerState.shieldTurns -= 1;
+    //             }
+
+    //             int roll = Random.Range(1, 7);
+    //             Debug.Log("Player " + playerState.playerIndex + " rolled " + roll);
+
+    //             playersMoving++;
+
+    //             if(playerState.addedStepsNextRoll > 0)
+    //             {
+    //                 roll += playerState.addedStepsNextRoll;
+    //             }
+    //             player.MoveSteps(roll);
+    //         }
+    //     }
+    // }
+
+    public bool TryGetPlayer(string playerId, out Player player)
     {
-        playersMoving = 0;
-
-        foreach (Player player in players)
-        {
-            PlayerState playerState = player.GetComponent<PlayerState>();
-
-            if(!playerState.isMoving && playerState.CanPlayTurn())
-            {
-                // Shield handling
-                if(playerState.shieldTurns > 0)
-                {
-                    playerState.shieldTurns -= 1;
-                }
-
-                int roll = Random.Range(1, 7);
-                Debug.Log("Player " + playerState.playerIndex + " rolled " + roll);
-
-                playersMoving++;
-
-                if(playerState.addedStepsNextRoll > 0)
-                {
-                    roll += playerState.addedStepsNextRoll;
-                }
-                player.MoveSteps(roll);
-            }
-        }
+        return playerDict.TryGetValue(playerId, out player);
     }
 
     public void PlayerFinishedMoving()
