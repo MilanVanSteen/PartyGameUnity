@@ -4,18 +4,37 @@ using Newtonsoft.Json;
 using SocketIOClient;
 using SocketIOClient.Transport;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SocketManager : MonoBehaviour
 {
+    public static SocketManager Instance;
+
     private SocketIOUnity socket;
     private LobbyManager lobbyManager;
 
     void Awake()
     {
-        // Keep this object alive across scenes
-        DontDestroyOnLoad(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+        else
+        {
+            Destroy(gameObject); // avoid duplicates
+        }
     }
-    
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "SampleScene") // Actual game scene later
+        {
+            Debug.Log("Scene loaded, initializing board...");
+            BoardManager.Instance.InitializeBoard(GameData.CurrentPlayers);
+        }
+    }
+        
     void Start()
     {
         if (lobbyManager == null) lobbyManager = FindFirstObjectByType<LobbyManager>();
@@ -122,6 +141,11 @@ public class SocketManager : MonoBehaviour
     {
         Debug.Log("Game is starting!");
 
+        // Save playerList
+        string rawJson = response.GetValue().ToString();
+        PlayerList data = JsonConvert.DeserializeObject<PlayerList>(rawJson);
+        GameData.CurrentPlayers = data;
+
         MainThreadDispatcher.RunOnMainThread(() =>
         {
             StartGameClient();
@@ -131,7 +155,7 @@ public class SocketManager : MonoBehaviour
     {
         Debug.Log("Loading game scene...");
 
-        UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene"); // Change to actual next scene later
+        SceneManager.LoadScene("SampleScene"); // Change to actual next scene later
     }
 
     // Call this method from your game (UI button, dice roll, etc.)

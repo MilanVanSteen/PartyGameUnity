@@ -5,17 +5,70 @@ public class BoardManager : MonoBehaviour
 {
     public static BoardManager Instance;
 
+    private GameObject playerPrefab;
+    private Transform playerContainer;
+    private Tile startingTile;
+
     private List<Player> players = new();
+    private Dictionary<string, Player> playerDict = new();
+
     private int playersMoving = 0;
 
     // Timer
     private bool powerupPhaseActive = false;
     private float powerupTimer = 0f;
-    private float powerupPhaseDuration = 10f;
+    private readonly float powerupPhaseDuration = 10f;
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void InitializeBoard(PlayerList playerList)
+    {
+        // Find the starting tile in the scene
+        GameObject startTileGO = GameObject.FindWithTag("StartingTile");
+        if (startTileGO != null)
+        {
+            startingTile = startTileGO.GetComponent<Tile>();
+        }
+        else
+        {
+            Debug.LogError("No GameObject with tag 'StartingTile' found in the scene!");
+            return;
+        }
+
+        // Assign player container dynamically
+        if (playerContainer == null)
+        {
+            GameObject containerGO = GameObject.Find("PlayerContainer");
+            if (containerGO != null)
+            {
+                playerContainer = containerGO.transform;
+            }
+            else
+            {
+                Debug.LogError("No PlayerContainer found in the scene!");
+            }
+        }
+
+        // Assign player prefab dynamically (need to be in Resources)
+        if (playerPrefab == null)
+        {
+            playerPrefab = Resources.Load<GameObject>("Prefabs/PlayerPrefab");
+        }
+
+        RegisterNetworkPlayers(playerList);
+
+        // other setup logic (tiles, UI, etc.)
     }
 
     private void Update()
@@ -31,12 +84,39 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public void RegisterPlayer(Player player)
+    public void RegisterNetworkPlayers(PlayerList playerList)
     {
-        if (!players.Contains(player))
+        players.Clear();
+        playerDict.Clear();
+
+        Color[] colors = { Color.red, Color.blue, Color.green, Color.yellow };
+
+        for (int i = 0; i < playerList.players.Length; i++)
         {
+            var wp = playerList.players[i];
+
+            Player player = FindOrSpawnPlayer(wp, i, colors[i % colors.Length]);
             players.Add(player);
+            playerDict[wp.id] = player;
         }
+    }
+
+    // Spawn or find existing player by ID
+    private Player FindOrSpawnPlayer(WebPlayer wp, int index, Color color)
+    {
+        // Check if player already exists in scene
+        if (playerDict.TryGetValue(wp.id, out Player existing))
+            return existing;
+
+        GameObject go = Instantiate(playerPrefab, playerContainer);
+        Player player = go.GetComponent<Player>();
+        player.Initialize(wp.id, color, index);
+
+        // Optionally set starting tile
+        player.currentTile = startingTile; 
+        player.transform.position = player.currentTile.transform.position + Vector3.up;
+
+        return player;
     }
     
     public void RollForAllPlayers()
@@ -116,7 +196,7 @@ public class BoardManager : MonoBehaviour
     {
         if (powerupPhaseActive)
         {
-            PlayerState state = player.playerState;
+            PlayerState state = player.PlayerState;
             if (inventoryIndex < state.inventory.Count)
             {
                 PowerupType powerup = state.inventory[inventoryIndex];
@@ -141,19 +221,19 @@ public class BoardManager : MonoBehaviour
 
             case PowerupType.AddedSteps:
                 Debug.Log("Next roll +2");
-                player.playerState.addedStepsNextRoll += 2;
+                player.PlayerState.addedStepsNextRoll += 2;
                 break;
 
             case PowerupType.Shield:
                 Debug.Log("Shield activated for 2 turns");
-                player.playerState.shieldTurns = 2;
+                player.PlayerState.shieldTurns = 2;
                 break;
 
             case PowerupType.SwapPosition:
                 // Temporary keyboard test: swap with first other player
                 if (target != null)
                 {
-                    if (target.playerState.shieldTurns > 0)
+                    if (target.PlayerState.shieldTurns > 0)
                     {
                         Debug.Log("Target is shielded! Powerup blocked.");
                         return;
@@ -166,7 +246,7 @@ public class BoardManager : MonoBehaviour
                     player.currentTile = target.currentTile;
                     target.currentTile = tempTile;
 
-                    Debug.Log($"{player.playerState.playerIndex} swapped with {target.playerState.playerIndex}");
+                    Debug.Log($"{player.PlayerState.playerIndex} swapped with {target.PlayerState.playerIndex}");
                 }
                 break;
 
@@ -174,7 +254,7 @@ public class BoardManager : MonoBehaviour
                 // Temporary: send first other player back 2 tiles
                 if (target != null)
                 {
-                    if (target.playerState.shieldTurns > 0)
+                    if (target.PlayerState.shieldTurns > 0)
                     {
                         Debug.Log("Target is shielded! Powerup blocked.");
                         return;
@@ -187,7 +267,7 @@ public class BoardManager : MonoBehaviour
                     target.transform.position = tile.transform.position + Vector3.up;
                     target.currentTile = tile;
 
-                    Debug.Log($"{player.playerState.playerIndex} sent {target.playerState.playerIndex} back 2 tiles");
+                    Debug.Log($"{player.PlayerState.playerIndex} sent {target.PlayerState.playerIndex} back 2 tiles");
                 }
                 break;
         }

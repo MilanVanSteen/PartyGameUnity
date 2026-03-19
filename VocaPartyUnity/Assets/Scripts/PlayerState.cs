@@ -6,7 +6,7 @@ public class PlayerState : MonoBehaviour
     public bool stuck = false;
     public bool isMoving = false;
     public List<PowerupType> inventory = new();
-    public int playerIndex = 0; // player number gotten from server -> later
+    public int playerIndex = 0;
 
     public int addedStepsNextRoll = 0;
     public int shieldTurns = 0;

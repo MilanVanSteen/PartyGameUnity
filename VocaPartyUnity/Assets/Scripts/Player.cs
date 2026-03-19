@@ -3,27 +3,40 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public string playerId;
+
+    public Color playerColor = Color.white;
+    private Renderer rend;
+
     public Tile currentTile;
     public float moveSpeed = 3f;
-    public PlayerState playerState { get; private set; }
+    public PlayerState PlayerState { get; private set; }
     
     private void Awake(){
-        playerState = GetComponent<PlayerState>();
+        PlayerState = GetComponent<PlayerState>();
+        rend = GetComponentInChildren<Renderer>();
     }
 
-    private void Start()
+    public void Initialize(string id, Color color, int playerIndex)
     {
-        BoardManager.Instance.RegisterPlayer(this);
+        playerId = id;
+        playerColor = color;
+        PlayerState.playerIndex = playerIndex;
+
+        if (rend != null)
+            rend.material.color = playerColor;
+
+        gameObject.name = $"Player_{playerIndex}";
     }
 
     public void MoveSteps(int steps)
     {
-        if (playerState.isMoving) return;
+        if (PlayerState.isMoving) return;
         StartCoroutine(MoveRoutine(steps));
     }
     private IEnumerator MoveRoutine(int steps)
     {
-        playerState.isMoving = true;
+        PlayerState.isMoving = true;
 
         Tile nextTile;
 
@@ -41,7 +54,7 @@ public class Player : MonoBehaviour
 
         yield return HandleTileEffect();
 
-        playerState.isMoving = false;
+        PlayerState.isMoving = false;
         BoardManager.Instance.PlayerFinishedMoving();
     }
 
@@ -82,13 +95,13 @@ public class Player : MonoBehaviour
 
             case TileType.Powerup:
                 PowerupType randomPowerup = GetRandomPowerup();
-                playerState.inventory.Add(randomPowerup);
+                PlayerState.inventory.Add(randomPowerup);
                 Debug.Log(gameObject.name + " received powerup: " + randomPowerup);
                 break;
 
             case TileType.Stuck:
                 Debug.Log("Player stuck next turn");
-                playerState.stuck = true;
+                PlayerState.stuck = true;
                 break;
 
             case TileType.Finish:
