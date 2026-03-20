@@ -194,11 +194,20 @@ public class SocketManager : MonoBehaviour
 
         MainThreadDispatcher.RunOnMainThread(() =>
         {
+            Debug.Log("Inside thread now...");
             foreach (var move in moveList.moves)
             {
+                Debug.Log("Foreach is handling...");
                 if (BoardManager.Instance.TryGetPlayer(move.playerId, out Player player))
                 {
+                    Debug.Log($"Moving player {player.PlayerState.playerIndex} by {move.roll} steps");
+
+                    player.PlayerState.isMoving = false;
                     player.MoveSteps(move.roll); // Move the player in Unity
+                }
+                else
+                {
+                    Debug.LogWarning("Player not found: " + move.playerId);
                 }
             }
         });

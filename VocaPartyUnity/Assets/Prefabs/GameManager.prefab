@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4460117314787677177}
   - component: {fileID: 563107942601278223}
   - component: {fileID: 2967753464845285386}
+  - component: {fileID: 3719001708986825302}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -70,3 +71,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de2de2d82b0285441a6453bab37ec580, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DiceTester
+--- !u!114 &3719001708986825302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2336421068778731596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 728495974942db243b11e08d6740b9df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MainThreadDispatcher

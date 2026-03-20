@@ -151,6 +151,7 @@ public class BoardManager : MonoBehaviour
 
     public bool TryGetPlayer(string playerId, out Player player)
     {
+        Debug.Log("Trying to get player..." + playerId);
         return playerDict.TryGetValue(playerId, out player);
     }
 
