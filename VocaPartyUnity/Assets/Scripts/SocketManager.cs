@@ -237,8 +237,6 @@ public class SocketManager : MonoBehaviour
                     {
                         BoardManager.Instance.RegisterMovingPlayer();
 
-                        Debug.Log($"Moving player {player.PlayerState.playerIndex} by {move.roll} steps");
-
                         player.MoveSteps(move.roll); // Move the player in Unity
                     }
                 }
@@ -307,6 +305,15 @@ public class SocketManager : MonoBehaviour
         {
             socket.Emit("REQUEST_EXTRA_ROLL", new { playerId });
             Debug.Log($"Requested ExtraRoll for player {playerId}");
+        }
+    }
+
+    public void ShieldExpired(string playerId)
+    {
+        if (socket != null && socket.Connected)
+        {
+            socket.Emit("SHIELD_EXPIRED", new { playerId });
+            Debug.Log($"Sent SHIELD_EXPIRED for player {playerId}");
         }
     }
 

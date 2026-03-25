@@ -54,6 +54,7 @@ public class Player : MonoBehaviour
             PlayerState.addedStepsNextRoll = 0;
         }
 
+        Debug.Log($"Moving player {playerName} by {steps} steps");
         StartCoroutine(MoveRoutine(steps));
     }
     private IEnumerator MoveRoutine(int steps)
@@ -136,5 +137,10 @@ public class Player : MonoBehaviour
     {
         PowerupType[] values = (PowerupType[])System.Enum.GetValues(typeof(PowerupType));
         return values[Random.Range(0, values.Length)];
+    }
+
+    public void DecrementShield()
+    {
+        PlayerState.ShieldHandling(playerId);
     }
 }

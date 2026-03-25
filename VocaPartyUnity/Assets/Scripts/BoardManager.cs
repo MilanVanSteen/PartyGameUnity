@@ -122,36 +122,6 @@ public class BoardManager : MonoBehaviour
 
         return player;
     }
-    
-    // public void RollForAllPlayers()
-    // {
-    //     playersMoving = 0;
-
-    //     foreach (Player player in players)
-    //     {
-    //         PlayerState playerState = player.GetComponent<PlayerState>();
-
-    //         if(!playerState.isMoving && playerState.CanPlayTurn())
-    //         {
-    //             // Shield handling
-    //             if(playerState.shieldTurns > 0)
-    //             {
-    //                 playerState.shieldTurns -= 1;
-    //             }
-
-    //             int roll = Random.Range(1, 7);
-    //             Debug.Log("Player " + playerState.playerIndex + " rolled " + roll);
-
-    //             playersMoving++;
-
-    //             if(playerState.addedStepsNextRoll > 0)
-    //             {
-    //                 roll += playerState.addedStepsNextRoll;
-    //             }
-    //             player.MoveSteps(roll);
-    //         }
-    //     }
-    // }
 
     public bool GetPowerupPhase()
     {
@@ -222,6 +192,11 @@ public class BoardManager : MonoBehaviour
 
         SocketManager.Instance.NotifyPowerupPhaseEnded();
 
+        foreach (Player player in players)
+        {
+            player.DecrementShield();
+        }
+
         // Next phase later:
         // StartMinigame();
     }
@@ -247,13 +222,12 @@ public class BoardManager : MonoBehaviour
 
         switch (powerup)
         {
-            // Make better (see dice roll on personal screen?)
             case PowerupType.ExtraRoll:
                 Debug.Log($"Reach this?");
                 yield return ExecuteExtraRoll(player);
                 break;
 
-            // Make better (visual)
+            // Make better (see below dice upon roll that gets extra)
             case PowerupType.AddedSteps:
                 Debug.Log("Next roll +2");
                 player.PlayerState.addedStepsNextRoll += 2;
@@ -262,7 +236,7 @@ public class BoardManager : MonoBehaviour
             // Make better (visual)
             case PowerupType.Shield:
                 Debug.Log("Shield activated for 2 turns");
-                player.PlayerState.shieldTurns = 2;
+                player.PlayerState.shieldTurns += 3; // Extra turn because 1 get instantly taken since turn ends afterwards
                 break;
 
             // Make better (choice on website)

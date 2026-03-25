@@ -25,4 +25,20 @@ public class PlayerState : MonoBehaviour
         }
         return true;
     }
+
+    public void ShieldHandling(string playerId)
+    {
+        if (shieldTurns > 0)
+        {
+            shieldTurns--;
+            Debug.Log($"{gameObject.name} shield turns left: {shieldTurns}");
+
+            // Notify website if expired
+            if (shieldTurns == 0)
+            {
+                // This assumes you have a SocketManager singleton
+                SocketManager.Instance.ShieldExpired(playerId);
+            }
+        }
+    }
 }
