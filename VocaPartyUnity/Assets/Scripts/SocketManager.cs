@@ -53,6 +53,9 @@ public class SocketManager : MonoBehaviour
         socket.On("ROOM_CREATED", OnRoomCreated);
         socket.On("GAME_STARTED", OnGameStarted);
         socket.On("PLAYER_MOVE", OnPlayerMove);
+        socket.On("POWERUP_SELECTED", OnPowerupSelected);
+        socket.On("POWERUP_SKIPPED", OnPowerupSkipped);
+        socket.On("POWERUP_PHASE_FORCE_END", OnEndPowerupPhase);
 
         // Connect
         socket.Connect();
@@ -211,6 +214,72 @@ public class SocketManager : MonoBehaviour
                 }
             }
         });
+    }
+
+    public void SendPowerUpInventory(string playerId, List<PowerupType> inventory)
+    {
+        if (socket != null && socket.Connected)
+        {
+            List<string> inventoryNames = new();
+            foreach (var powerup in inventory)
+            {
+                inventoryNames.Add(powerup.ToString());
+            }
+
+            float duration = BoardManager.Instance.powerupPhaseDuration;
+            var data = new
+            {
+                playerId,
+                inventory = inventoryNames,
+                duration
+            };
+
+            Debug.Log($"Sending inventory to {playerId}");
+
+            socket.Emit("POWERUP_PHASE_START", data);
+        }
+        else
+        {
+            Debug.LogWarning("Socket not connected. Cannot send inventory.");
+        }
+    }
+
+    [Serializable]
+    public class PowerupSelection
+    {
+        public string playerId;
+        public int inventoryIndex;
+    }
+    private void OnPowerupSelected(SocketIOResponse response)
+    {
+        string rawJson = response.GetValue().ToString();
+        var data = JsonConvert.DeserializeObject<PowerupSelection>(rawJson);
+
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            if (BoardManager.Instance.TryGetPlayer(data.playerId, out Player player))
+            {
+                BoardManager.Instance.UsePowerup(
+                    player,
+                    data.inventoryIndex
+                );
+            }
+        });
+    }
+
+    private void OnPowerupSkipped(SocketIOResponse response)
+    {
+        Debug.Log("Player skipped powerup.");
+    }
+
+    public void NotifyPowerupPhaseEnded()
+    {
+        socket.Emit("POWERUP_PHASE_END");
+    }
+    private void OnEndPowerupPhase(SocketIOResponse response)
+    {
+        Debug.Log("Website ended powerup phase.");
+        BoardManager.Instance.EndPowerupPhase();
     }
 
     private void OnApplicationQuit()

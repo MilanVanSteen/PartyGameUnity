@@ -17,7 +17,7 @@ public class BoardManager : MonoBehaviour
     // Timer
     private bool powerupPhaseActive = false;
     private float powerupTimer = 0f;
-    private readonly float powerupPhaseDuration = 10f;
+    public readonly float powerupPhaseDuration = 10f;
 
     private void Awake()
     {
@@ -168,12 +168,12 @@ public class BoardManager : MonoBehaviour
     {
         Debug.Log("All players finished moving!");
 
-        StartPowerupPhase();
+        StartPowerUpPhase();
     }
 
-    private void StartPowerupPhase()
+    private void StartPowerUpPhase()
     {
-        Debug.Log("Powerup phase started!");
+        Debug.Log("Starting powerup phase...");
 
         powerupPhaseActive = true;
         powerupTimer = powerupPhaseDuration;
@@ -186,13 +186,20 @@ public class BoardManager : MonoBehaviour
             {
                 Debug.Log("Player " + state.playerIndex + " can use powerups.");
             }
+
+            SocketManager.Instance.SendPowerUpInventory(
+                player.playerId,
+                state.inventory
+            );
         }
     }
-    private void EndPowerupPhase()
+    public void EndPowerupPhase()
     {
         powerupPhaseActive = false;
 
         Debug.Log("Powerup phase ended!");
+
+        SocketManager.Instance.NotifyPowerupPhaseEnded();
 
         // Next phase later:
         // StartMinigame();
