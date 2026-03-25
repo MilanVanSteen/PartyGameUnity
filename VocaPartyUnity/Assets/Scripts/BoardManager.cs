@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ public class BoardManager : MonoBehaviour
 
     public bool dicerollActive = false;
     private bool powerupPhaseActive = false;
+    public bool extraRollActive = false;
 
     // Timer
     private float powerupTimer = 0f;
@@ -80,7 +82,7 @@ public class BoardManager : MonoBehaviour
 
         powerupTimer -= Time.deltaTime;
 
-        if (powerupTimer <= 0f)
+        if (powerupTimer <= 0f && !extraRollActive)
         {
             EndPowerupPhase();
         }
@@ -215,7 +217,7 @@ public class BoardManager : MonoBehaviour
     public void EndPowerupPhase()
     {
         powerupPhaseActive = false;
-
+        
         Debug.Log("Powerup phase ended!");
 
         SocketManager.Instance.NotifyPowerupPhaseEnded();
@@ -233,42 +235,44 @@ public class BoardManager : MonoBehaviour
             {
                 PowerupType powerup = state.inventory[inventoryIndex];
                 Debug.Log("Before use: " + string.Join(", ", state.inventory));
-                ExecutePowerup(player, powerup);
+                StartCoroutine(ExecutePowerup(player, powerup));
                 state.inventory.RemoveAt(inventoryIndex);
                 Debug.Log("After use: " + string.Join(", ", state.inventory));
             }
         }
     }
-    private void ExecutePowerup(Player player, PowerupType powerup)
+    private IEnumerator ExecutePowerup(Player player, PowerupType powerup)
     {
         Player target = players.Find(p => p != player);
 
         switch (powerup)
         {
+            // Make better (see dice roll on personal screen?)
             case PowerupType.ExtraRoll:
-                int roll = Random.Range(1, 7);
-                Debug.Log("Extra roll: " + roll);
-                player.MoveSteps(roll);
+                Debug.Log($"Reach this?");
+                yield return ExecuteExtraRoll(player);
                 break;
 
+            // Make better (visual)
             case PowerupType.AddedSteps:
                 Debug.Log("Next roll +2");
                 player.PlayerState.addedStepsNextRoll += 2;
                 break;
 
+            // Make better (visual)
             case PowerupType.Shield:
                 Debug.Log("Shield activated for 2 turns");
                 player.PlayerState.shieldTurns = 2;
                 break;
 
+            // Make better (choice on website)
             case PowerupType.SwapPosition:
-                // Temporary keyboard test: swap with first other player
                 if (target != null)
                 {
                     if (target.PlayerState.shieldTurns > 0)
                     {
                         Debug.Log("Target is shielded! Powerup blocked.");
-                        return;
+                        break;
                     }
                     Vector3 temp = player.transform.position;
                     player.transform.position = target.transform.position;
@@ -282,14 +286,14 @@ public class BoardManager : MonoBehaviour
                 }
                 break;
 
+            // Make better (choice on website)
             case PowerupType.SendPlayerBack:
-                // Temporary: send first other player back 2 tiles
                 if (target != null)
                 {
                     if (target.PlayerState.shieldTurns > 0)
                     {
                         Debug.Log("Target is shielded! Powerup blocked.");
-                        return;
+                        break;
                     }
                     Tile tile = target.currentTile;
                     for (int i = 0; i < 2; i++)
@@ -302,6 +306,25 @@ public class BoardManager : MonoBehaviour
                     Debug.Log($"{player.PlayerState.playerIndex} sent {target.PlayerState.playerIndex} back 2 tiles");
                 }
                 break;
+        }
+    }
+
+    private IEnumerator ExecuteExtraRoll(Player player)
+    {
+        Debug.Log($"{player.gameObject.name} requested ExtraRoll");
+
+        extraRollActive = true;
+
+        // Ask website to roll dice for this player only
+        SocketManager.Instance.RequestExtraRoll(player.playerId);
+
+        // Wait until we get the dice result or timeout
+        float timer = 0f;
+        bool received = false;
+        while (!received && timer < powerupPhaseDuration)
+        {
+            timer += Time.deltaTime;
+            yield return null;
         }
     }
 

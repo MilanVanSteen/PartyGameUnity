@@ -58,6 +58,7 @@ public class SocketManager : MonoBehaviour
         socket.On("GAME_STARTED", OnGameStarted);
         socket.On("PLAYER_MOVE", OnPlayerMove);
         socket.On("POWERUP_SELECTED", OnPowerupSelected);
+        socket.On("EXTRA_ROLL_RESULT", OnExtraRollResult);
         socket.On("POWERUP_SKIPPED", OnPowerupSkipped);
         socket.On("POWERUP_PHASE_FORCE_END", OnEndPowerupPhase);
 
@@ -296,6 +297,44 @@ public class SocketManager : MonoBehaviour
                     player,
                     data.inventoryIndex
                 );
+            }
+        });
+    }
+
+    public void RequestExtraRoll(string playerId)
+    {
+        if (socket != null && socket.Connected)
+        {
+            socket.Emit("REQUEST_EXTRA_ROLL", new { playerId });
+            Debug.Log($"Requested ExtraRoll for player {playerId}");
+        }
+    }
+
+    [Serializable]
+    public class ExtraRollResult
+    {
+        public string playerId;
+        public int roll;
+    }
+    private void OnExtraRollResult(SocketIOResponse response)
+    {
+        string rawJson = response.GetValue().ToString();
+        ExtraRollResult result = JsonConvert.DeserializeObject<ExtraRollResult>(rawJson);
+
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            if (BoardManager.Instance.TryGetPlayer(result.playerId, out Player player))
+            {
+                Debug.Log($"Extra roll received for {player.PlayerState.playerIndex}: {result.roll}");
+                // Trigger the player's movement
+                BoardManager.Instance.RegisterMovingPlayer();
+                player.MoveSteps(result.roll); // Or MoveStepsCoroutine if you want animation
+
+                BoardManager.Instance.extraRollActive = false;
+            }
+            else
+            {
+                Debug.LogWarning("Extra roll: player not found: " + result.playerId);
             }
         });
     }

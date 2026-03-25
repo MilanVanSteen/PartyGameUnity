@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    private string playerName;
     public string playerId;
 
     public Color playerColor = Color.white;
@@ -27,11 +28,32 @@ public class Player : MonoBehaviour
             rend.material.color = playerColor;
 
         gameObject.name = $"Player_{playerIndex}";
+        playerName = gameObject.name;
+    }
+
+    public IEnumerator MoveStepsCoroutine(int steps)
+    {
+        // Handle AddedSteps powerup
+        if (PlayerState.addedStepsNextRoll > 0)
+        {
+            steps += PlayerState.addedStepsNextRoll;
+            PlayerState.addedStepsNextRoll = 0;
+        }
+
+        yield return MoveRoutine(steps);
     }
 
     public void MoveSteps(int steps)
     {
         if (PlayerState.isMoving) return;
+
+        // Added Steps powerup handling
+        if(PlayerState.addedStepsNextRoll > 0)
+        {
+            steps += PlayerState.addedStepsNextRoll;
+            PlayerState.addedStepsNextRoll = 0;
+        }
+
         StartCoroutine(MoveRoutine(steps));
     }
     private IEnumerator MoveRoutine(int steps)
@@ -82,13 +104,13 @@ public class Player : MonoBehaviour
                 break;
 
             case TileType.Ladder:
-                Debug.Log("Player landed on ladder tile, go forward");
+                Debug.Log(playerName + " landed on ladder tile, go forward");
                 yield return MoveToTile(currentTile.targetTile);
                 currentTile = currentTile.targetTile;
                 break;
 
             case TileType.Snake:
-                Debug.Log("Player landed on snake tile, go back");
+                Debug.Log(playerName + " landed on snake tile, go back");
                 yield return MoveToTile(currentTile.targetTile);
                 currentTile = currentTile.targetTile;
                 break;
@@ -96,16 +118,16 @@ public class Player : MonoBehaviour
             case TileType.Powerup:
                 PowerupType randomPowerup = GetRandomPowerup();
                 PlayerState.inventory.Add(randomPowerup);
-                Debug.Log(gameObject.name + " received powerup: " + randomPowerup);
+                Debug.Log(playerName + " received powerup: " + randomPowerup);
                 break;
 
             case TileType.Stuck:
-                Debug.Log("Player stuck next turn");
+                Debug.Log(playerName + " stuck next turn");
                 PlayerState.stuck = true;
                 break;
 
             case TileType.Finish:
-                Debug.Log("Player finished!");
+                Debug.Log(playerName + " finished!");
                 BoardManager.Instance.HandleFinish(this);
                 break;
         }
