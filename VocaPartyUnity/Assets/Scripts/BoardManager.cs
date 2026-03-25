@@ -304,4 +304,26 @@ public class BoardManager : MonoBehaviour
                 break;
         }
     }
+
+    public void HandleFinish(Player player)
+    {
+        player.PlayerState.hasFinished = true;
+        //Debug.Log($"{player.Name} has reached the finish!");
+
+        // Stop further movement
+        player.PlayerState.canMove = false;
+
+        EndGame();
+    }
+
+    private void EndGame()
+    {
+        Debug.Log("Game Over! Final standings:");
+        for (int i = 0; i < players.Count; i++)
+        {
+            Debug.Log($"{i + 1}. {players[i].gameObject.name}");
+        }
+
+        // TODO: show UI, disable dice, etc.
+    }
 }

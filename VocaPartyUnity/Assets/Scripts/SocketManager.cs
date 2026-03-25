@@ -202,7 +202,7 @@ public class SocketManager : MonoBehaviour
             Debug.Log("Dice roll already active.");
             return;
         }
-        
+
         if (socket != null && socket.Connected)
         {
             BoardManager.Instance.dicerollActive = true;
@@ -232,11 +232,14 @@ public class SocketManager : MonoBehaviour
                 Debug.Log("Foreach is handling...");
                 if (BoardManager.Instance.TryGetPlayer(move.playerId, out Player player))
                 {
-                    BoardManager.Instance.RegisterMovingPlayer();
+                    if(player.PlayerState.canMove && player.PlayerState.CanPlayTurn())
+                    {
+                        BoardManager.Instance.RegisterMovingPlayer();
 
-                    Debug.Log($"Moving player {player.PlayerState.playerIndex} by {move.roll} steps");
+                        Debug.Log($"Moving player {player.PlayerState.playerIndex} by {move.roll} steps");
 
-                    player.MoveSteps(move.roll); // Move the player in Unity
+                        player.MoveSteps(move.roll); // Move the player in Unity
+                    }
                 }
                 else
                 {

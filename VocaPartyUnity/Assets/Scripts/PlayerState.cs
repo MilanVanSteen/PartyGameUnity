@@ -11,6 +11,9 @@ public class PlayerState : MonoBehaviour
     public int addedStepsNextRoll = 0;
     public int shieldTurns = 0;
 
+    public bool hasFinished = false;
+    public bool canMove = true;
+
     // Called at the start of the player's turn
     public bool CanPlayTurn()
     {

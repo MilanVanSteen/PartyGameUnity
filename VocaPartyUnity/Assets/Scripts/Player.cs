@@ -106,6 +106,7 @@ public class Player : MonoBehaviour
 
             case TileType.Finish:
                 Debug.Log("Player finished!");
+                BoardManager.Instance.HandleFinish(this);
                 break;
         }
     }
