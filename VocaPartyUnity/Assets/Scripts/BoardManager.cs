@@ -14,8 +14,10 @@ public class BoardManager : MonoBehaviour
 
     private int playersMoving = 0;
 
-    // Timer
+    public bool dicerollActive = false;
     private bool powerupPhaseActive = false;
+
+    // Timer
     private float powerupTimer = 0f;
     public readonly float powerupPhaseDuration = 10f;
 
@@ -149,17 +151,28 @@ public class BoardManager : MonoBehaviour
     //     }
     // }
 
+    public bool GetPowerupPhase()
+    {
+        return powerupPhaseActive;
+    }
+
     public bool TryGetPlayer(string playerId, out Player player)
     {
         Debug.Log("Trying to get player..." + playerId);
         return playerDict.TryGetValue(playerId, out player);
     }
 
+    public void RegisterMovingPlayer()
+    {
+        playersMoving++;
+        Debug.Log("Players moving now: " + playersMoving);
+    }
+
     public void PlayerFinishedMoving()
     {
         playersMoving--;
 
-        if (playersMoving <= 0)
+        if (playersMoving == 0)
         {
             AllPlayersFinished();
         }
@@ -173,6 +186,12 @@ public class BoardManager : MonoBehaviour
 
     private void StartPowerUpPhase()
     {
+        if (powerupPhaseActive)
+        {
+            Debug.LogWarning("Powerup phase already active!");
+            return;
+        }
+
         Debug.Log("Starting powerup phase...");
 
         powerupPhaseActive = true;

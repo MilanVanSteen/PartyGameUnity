@@ -3,6 +3,7 @@ using UnityEngine;
 public class DiceTester : MonoBehaviour
 {
     private SocketManager SocketManager => SocketManager.Instance;
+    private BoardManager BoardManager => BoardManager.Instance;
 
     private void Update()
     {
@@ -10,7 +11,14 @@ public class DiceTester : MonoBehaviour
         {
             if (SocketManager != null)
             {
-                SocketManager.TriggerDiceRoll();
+                if(BoardManager.GetPowerupPhase() == false && BoardManager.dicerollActive == false)
+                {
+                    SocketManager.TriggerDiceRoll();
+                }
+                else
+                {
+                    Debug.LogWarning("DiceRoll or Powerup phase already active");
+                }
             }
             else
             {

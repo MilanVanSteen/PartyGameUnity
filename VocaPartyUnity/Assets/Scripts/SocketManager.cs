@@ -45,7 +45,11 @@ public class SocketManager : MonoBehaviour
         socket = new SocketIOUnity(uri, new SocketIOOptions
         {
             Query = new Dictionary<string, string> { { "token", "UNITY" } },
-            Transport = TransportProtocol.WebSocket
+            Transport = TransportProtocol.WebSocket,
+
+            Reconnection = true,
+            ReconnectionAttempts = 999999,
+            ReconnectionDelay = 2000
         });
 
         // Listen for server events
@@ -63,6 +67,22 @@ public class SocketManager : MonoBehaviour
         {
             Debug.Log("Unity connected! Creating room...");
             socket.Emit("CREATE_ROOM");
+        };
+
+        // Debug
+        socket.OnDisconnected += (sender, e) =>
+        {
+            Debug.LogWarning("Socket disconnected!");
+        };
+
+        socket.OnReconnectAttempt += (sender, e) =>
+        {
+            Debug.Log("Reconnecting...");
+        };
+
+        socket.OnReconnected += (sender, e) =>
+        {
+            Debug.Log("Reconnected!");
         };
     }
 
@@ -177,8 +197,15 @@ public class SocketManager : MonoBehaviour
 
     public void TriggerDiceRoll()
     {
+        if (BoardManager.Instance.dicerollActive)
+        {
+            Debug.Log("Dice roll already active.");
+            return;
+        }
+        
         if (socket != null && socket.Connected)
         {
+            BoardManager.Instance.dicerollActive = true;
             Debug.Log("Host triggering dice roll...");
             socket.Emit("ROLL_DICE");
         }
@@ -195,6 +222,8 @@ public class SocketManager : MonoBehaviour
 
         Debug.Log("All dice rolls finished, moving players...");
 
+        BoardManager.Instance.dicerollActive = false;
+
         MainThreadDispatcher.RunOnMainThread(() =>
         {
             Debug.Log("Inside thread now...");
@@ -203,9 +232,10 @@ public class SocketManager : MonoBehaviour
                 Debug.Log("Foreach is handling...");
                 if (BoardManager.Instance.TryGetPlayer(move.playerId, out Player player))
                 {
+                    BoardManager.Instance.RegisterMovingPlayer();
+
                     Debug.Log($"Moving player {player.PlayerState.playerIndex} by {move.roll} steps");
 
-                    player.PlayerState.isMoving = false;
                     player.MoveSteps(move.roll); // Move the player in Unity
                 }
                 else
