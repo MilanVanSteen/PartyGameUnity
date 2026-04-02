@@ -198,7 +198,7 @@ public class SocketManager : MonoBehaviour
 
     public void TriggerDiceRoll()
     {
-        if (BoardManager.Instance.dicerollActive)
+        if (BoardManager.Instance.currentPhase == GamePhase.DiceRoll)
         {
             Debug.Log("Dice roll already active.");
             return;
@@ -206,7 +206,7 @@ public class SocketManager : MonoBehaviour
 
         if (socket != null && socket.Connected)
         {
-            BoardManager.Instance.dicerollActive = true;
+            BoardManager.Instance.currentPhase = GamePhase.DiceRoll;
             Debug.Log("Host triggering dice roll...");
             socket.Emit("ROLL_DICE");
         }
@@ -223,7 +223,7 @@ public class SocketManager : MonoBehaviour
 
         Debug.Log("All dice rolls finished, moving players...");
 
-        BoardManager.Instance.dicerollActive = false;
+        BoardManager.Instance.currentPhase = GamePhase.Movement;
 
         MainThreadDispatcher.RunOnMainThread(() =>
         {

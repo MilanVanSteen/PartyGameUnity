@@ -15,8 +15,7 @@ public class BoardManager : MonoBehaviour
 
     private int playersMoving = 0;
 
-    public bool dicerollActive = false;
-    private bool powerupPhaseActive = false;
+    public GamePhase currentPhase = GamePhase.WaitingForRoll;
     public bool extraRollActive = false;
 
     // Timer
@@ -72,19 +71,20 @@ public class BoardManager : MonoBehaviour
 
         RegisterNetworkPlayers(playerList);
 
-        // other setup logic (tiles, UI, etc.)
+        // Other setup logic (tiles, UI, etc.)
     }
 
     private void Update()
     {
-        // Timer
-        if (!powerupPhaseActive) return;
-
-        powerupTimer -= Time.deltaTime;
-
-        if (powerupTimer <= 0f && !extraRollActive)
+        // Timer for powerup phase
+        if (currentPhase == GamePhase.Powerup)
         {
-            EndPowerupPhase();
+            powerupTimer -= Time.deltaTime;
+
+            if (powerupTimer <= 0f && !extraRollActive)
+            {
+                EndPowerupPhase();
+            }
         }
     }
 
@@ -123,11 +123,6 @@ public class BoardManager : MonoBehaviour
         return player;
     }
 
-    public bool GetPowerupPhase()
-    {
-        return powerupPhaseActive;
-    }
-
     public bool TryGetPlayer(string playerId, out Player player)
     {
         Debug.Log("Trying to get player..." + playerId);
@@ -136,6 +131,7 @@ public class BoardManager : MonoBehaviour
 
     public void RegisterMovingPlayer()
     {
+        currentPhase = GamePhase.Movement;
         playersMoving++;
         Debug.Log("Players moving now: " + playersMoving);
     }
@@ -158,7 +154,7 @@ public class BoardManager : MonoBehaviour
 
     private void StartPowerUpPhase()
     {
-        if (powerupPhaseActive)
+        if (currentPhase == GamePhase.Powerup)
         {
             Debug.LogWarning("Powerup phase already active!");
             return;
@@ -166,7 +162,7 @@ public class BoardManager : MonoBehaviour
 
         Debug.Log("Starting powerup phase...");
 
-        powerupPhaseActive = true;
+        currentPhase = GamePhase.Powerup;
         powerupTimer = powerupPhaseDuration;
 
         foreach (Player player in players)
@@ -185,9 +181,7 @@ public class BoardManager : MonoBehaviour
         }
     }
     public void EndPowerupPhase()
-    {
-        powerupPhaseActive = false;
-        
+    {        
         Debug.Log("Powerup phase ended!");
 
         SocketManager.Instance.NotifyPowerupPhaseEnded();
@@ -197,13 +191,12 @@ public class BoardManager : MonoBehaviour
             player.DecrementShield();
         }
 
-        // Next phase later:
-        // StartMinigame();
+        StartMinigamePhase();
     }
 
     public void UsePowerup(Player player, int inventoryIndex)
     {
-        if (powerupPhaseActive)
+        if (currentPhase == GamePhase.Powerup)
         {
             PlayerState state = player.PlayerState;
             if (inventoryIndex < state.inventory.Count)
@@ -302,10 +295,15 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    private void StartMinigamePhase()
+    {
+        currentPhase = GamePhase.WaitingForRoll;
+    }
+
     public void HandleFinish(Player player)
     {
         player.PlayerState.hasFinished = true;
-        //Debug.Log($"{player.Name} has reached the finish!");
+        Debug.Log($"{player.playerId} has reached the finish!");
 
         // Stop further movement
         player.PlayerState.canMove = false;

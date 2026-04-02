@@ -11,7 +11,7 @@ public class DiceTester : MonoBehaviour
         {
             if (SocketManager != null)
             {
-                if(BoardManager.GetPowerupPhase() == false && BoardManager.dicerollActive == false)
+                if(BoardManager.currentPhase == GamePhase.WaitingForRoll)
                 {
                     SocketManager.TriggerDiceRoll();
                 }
