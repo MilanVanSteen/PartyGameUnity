@@ -61,6 +61,7 @@ public class SocketManager : MonoBehaviour
         socket.On("EXTRA_ROLL_RESULT", OnExtraRollResult);
         socket.On("POWERUP_SKIPPED", OnPowerupSkipped);
         socket.On("POWERUP_PHASE_FORCE_END", OnEndPowerupPhase);
+        socket.On("PLAYER_FINISHED_MINIGAME", OnFinishedMinigame);
 
         // Connect
         socket.Connect();
@@ -223,6 +224,7 @@ public class SocketManager : MonoBehaviour
 
         Debug.Log("All dice rolls finished, moving players...");
 
+        BoardManager.Instance.ResetMovementCounter();
         BoardManager.Instance.currentPhase = GamePhase.Movement;
 
         MainThreadDispatcher.RunOnMainThread(() =>
@@ -337,7 +339,7 @@ public class SocketManager : MonoBehaviour
                 BoardManager.Instance.RegisterMovingPlayer();
                 player.MoveSteps(result.roll); // Or MoveStepsCoroutine if you want animation
 
-                BoardManager.Instance.extraRollActive = false;
+                BoardManager.Instance.OnExtraRollFinished(result.playerId);
             }
             else
             {
@@ -357,9 +359,51 @@ public class SocketManager : MonoBehaviour
     }
     private void OnEndPowerupPhase(SocketIOResponse response)
     {
-        Debug.Log("Website ended powerup phase.");
-        BoardManager.Instance.EndPowerupPhase();
+        BoardManager boardManager = BoardManager.Instance;
+        if (boardManager.currentPhase == GamePhase.Powerup && boardManager.HasNoPendingExtraRolls())
+        {
+            Debug.Log("Website ended powerup phase.");
+            boardManager.EndPowerupPhase();
+        }
     }
+
+    public void StartMinigameForPlayer(string playerId, MinigameType minigame, float minigameDuration)
+    {
+        if (socket != null && socket.Connected)
+        {
+            var data = new 
+            { 
+                playerId,
+                minigame = minigame.ToString(),
+                duration = minigameDuration
+            };
+            socket.Emit("MINIGAME_START", data);
+            Debug.Log($"Minigame {minigame} started for player {playerId}");
+        }
+    }
+
+    public void NotifyMinigameEnded()
+    {
+        socket.Emit("MINIGAME_END");
+    }
+    private void OnFinishedMinigame(SocketIOResponse response)
+    {
+        string rawJson = response.GetValue().ToString();
+        var data = JsonConvert.DeserializeObject<MinigameFinishData>(rawJson);
+        
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            MinigameManager.Instance.OnPlayerFinishedMinigame(data.playerId, data.correct);
+        });
+    }
+
+    [Serializable]
+    public class MinigameFinishData
+    {
+        public string playerId;
+        public bool correct;
+    }
+
 
     private void OnApplicationQuit()
     {

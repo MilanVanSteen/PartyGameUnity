@@ -16,11 +16,21 @@ public class BoardManager : MonoBehaviour
     private int playersMoving = 0;
 
     public GamePhase currentPhase = GamePhase.WaitingForRoll;
-    public bool extraRollActive = false;
+    private int extraRollsPending = 0;
 
-    // Timer
+    // Timer powerup phase
     private float powerupTimer = 0f;
     public readonly float powerupPhaseDuration = 10f;
+
+    // Minigames
+    private List<MinigameType> availableMinigames = new()
+    {
+        MinigameType.TypingAnswer,
+        MinigameType.MultipleChoice,
+        MinigameType.FillInBlank,
+        MinigameType.SpotError,
+        MinigameType.DartThrow
+    };
 
     private void Awake()
     {
@@ -81,7 +91,7 @@ public class BoardManager : MonoBehaviour
         {
             powerupTimer -= Time.deltaTime;
 
-            if (powerupTimer <= 0f && !extraRollActive)
+            if (powerupTimer <= 0f && extraRollsPending == 0)
             {
                 EndPowerupPhase();
             }
@@ -139,17 +149,35 @@ public class BoardManager : MonoBehaviour
     public void PlayerFinishedMoving()
     {
         playersMoving--;
+        Debug.Log("Player finished moving. Remaining: " + playersMoving);
 
         if (playersMoving == 0)
         {
+            Debug.Log("All players finished moving!");
             AllPlayersFinished();
+        }
+
+        if (playersMoving < 0)
+        {
+            Debug.LogError("playersMoving went negative!");
+            playersMoving = 0;
         }
     }
     private void AllPlayersFinished()
     {
-        Debug.Log("All players finished moving!");
+        if (currentPhase != GamePhase.Movement)
+        {
+            Debug.LogWarning("AllPlayersFinished called outside Movement phase!");
+            return;
+        }
 
         StartPowerUpPhase();
+    }
+
+    public void ResetMovementCounter()
+    {
+        Debug.Log("Resetting movement counter");
+        playersMoving = 0;
     }
 
     private void StartPowerUpPhase()
@@ -164,6 +192,7 @@ public class BoardManager : MonoBehaviour
 
         currentPhase = GamePhase.Powerup;
         powerupTimer = powerupPhaseDuration;
+        extraRollsPending = 0;
 
         foreach (Player player in players)
         {
@@ -280,24 +309,49 @@ public class BoardManager : MonoBehaviour
     {
         Debug.Log($"{player.gameObject.name} requested ExtraRoll");
 
-        extraRollActive = true;
+        extraRollsPending++;
 
         // Ask website to roll dice for this player only
         SocketManager.Instance.RequestExtraRoll(player.playerId);
 
-        // Wait until we get the dice result or timeout
-        float timer = 0f;
-        bool received = false;
-        while (!received && timer < powerupPhaseDuration)
-        {
-            timer += Time.deltaTime;
-            yield return null;
-        }
+        yield break;
+    }
+    public void OnExtraRollFinished(string playerId)
+    {
+        extraRollsPending--;
+
+        Debug.Log($"ExtraRoll finished for {playerId}. Remaining: {extraRollsPending}");
+
+        if (extraRollsPending < 0) extraRollsPending = 0;
+    }
+    public bool HasNoPendingExtraRolls()
+    {
+        return extraRollsPending == 0;
     }
 
     private void StartMinigamePhase()
     {
-        currentPhase = GamePhase.WaitingForRoll;
+        if (currentPhase == GamePhase.Minigame)
+        {
+            Debug.LogWarning("Minigame phase already active!");
+            return;
+        }
+
+        Debug.Log("Starting Minigame Phase...");
+
+        currentPhase = GamePhase.Minigame;
+
+        MinigameType selectedMinigame = availableMinigames[Random.Range(0, availableMinigames.Count)];
+        Debug.Log("Selected Minigame: " + selectedMinigame);
+
+        // Start minigame manager
+        MinigameManager.Instance.StartMinigame(players, selectedMinigame);
+    }
+
+    public void StartNextTurn()
+    {
+        currentPhase = GamePhase.WaitingForRoll; //Later goes automatically
+        Debug.Log("Next turn started, waiting for dice roll...");
     }
 
     public void HandleFinish(Player player)

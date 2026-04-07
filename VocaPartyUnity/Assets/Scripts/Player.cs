@@ -65,8 +65,14 @@ public class Player : MonoBehaviour
 
         for (int i = 0; i < steps; i++)
         {
-            if (currentTile.neighbors.Count == 0)
+            if (currentTile.neighbors.Count == 0) 
+            {
+                Debug.Log("No neighbors, stopping movement safely.");
+
+                PlayerState.isMoving = false;
+                BoardManager.Instance.PlayerFinishedMoving();
                 yield break;
+            }
 
             nextTile = currentTile.neighbors[0]; // first path for now
 
@@ -130,10 +136,13 @@ public class Player : MonoBehaviour
             case TileType.Finish:
                 Debug.Log(playerName + " finished!");
                 BoardManager.Instance.HandleFinish(this);
-                break;
+
+                PlayerState.isMoving = false;
+                BoardManager.Instance.PlayerFinishedMoving();
+                yield break;
         }
     }
-    private PowerupType GetRandomPowerup()
+    public PowerupType GetRandomPowerup()
     {
         PowerupType[] values = (PowerupType[])System.Enum.GetValues(typeof(PowerupType));
         return values[Random.Range(0, values.Length)];

@@ -750,7 +750,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4460117314787677177, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
   m_PrefabInstance: {fileID: 495574693475885832}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 495574693475885833}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f2090133606844429d1c66b2ed27d0d, type: 3}
@@ -1239,8 +1239,29 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2336421068778731596, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 495574693475885834}
   m_SourcePrefab: {fileID: 100100000, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
+--- !u!1 &495574693475885833 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2336421068778731596, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
+  m_PrefabInstance: {fileID: 495574693475885832}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &495574693475885834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 495574693475885833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57ec06d6951dfb54bb7c27908d1a2dae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MinigameManager
+  minigamePanelPrefab: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
