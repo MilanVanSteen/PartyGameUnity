@@ -351,6 +351,14 @@ public class SocketManager : MonoBehaviour
     private void OnPowerupSkipped(SocketIOResponse response)
     {
         Debug.Log("Player skipped powerup.");
+
+        string rawJson = response.GetValue().ToString();
+        var data = JsonConvert.DeserializeObject<MinigameFinishData>(rawJson);
+        
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            BoardManager.Instance.OnPlayerSelectedPowerup(data.playerId);
+        });
     }
 
     public void NotifyPowerupPhaseEnded()

@@ -22,6 +22,8 @@ public class BoardManager : MonoBehaviour
     private float powerupTimer = 0f;
     public readonly float powerupPhaseDuration = 10f;
 
+    public List<Player> powerUpPlayers;
+
     // Minigames
     private List<MinigameType> availableMinigames = new()
     {
@@ -193,8 +195,9 @@ public class BoardManager : MonoBehaviour
         currentPhase = GamePhase.Powerup;
         powerupTimer = powerupPhaseDuration;
         extraRollsPending = 0;
+        powerUpPlayers = new List<Player>(players);
 
-        foreach (Player player in players)
+        foreach (Player player in powerUpPlayers)
         {
             PlayerState state = player.GetComponent<PlayerState>();
 
@@ -236,6 +239,8 @@ public class BoardManager : MonoBehaviour
                 state.inventory.RemoveAt(inventoryIndex);
                 Debug.Log("After use: " + string.Join(", ", state.inventory));
             }
+            OnPlayerSelectedPowerup(player.playerId);
+            
         }
     }
     private IEnumerator ExecutePowerup(Player player, PowerupType powerup)
@@ -327,6 +332,21 @@ public class BoardManager : MonoBehaviour
     public bool HasNoPendingExtraRolls()
     {
         return extraRollsPending == 0;
+    }
+
+    public void OnPlayerSelectedPowerup(string playerId)
+    {
+        if (!powerUpPlayers.Exists(p => p.playerId == playerId)) return;
+
+        Player player = powerUpPlayers.Find(p => p.playerId == playerId);
+
+        powerUpPlayers.Remove(player);
+
+        // When all finished
+        if (powerUpPlayers.Count == 0)
+        {
+            EndPowerupPhase();
+        }
     }
 
     private void StartMinigamePhase()
