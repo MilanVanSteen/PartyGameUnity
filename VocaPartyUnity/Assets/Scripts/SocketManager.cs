@@ -367,18 +367,19 @@ public class SocketManager : MonoBehaviour
         }
     }
 
-    public void StartMinigameForPlayer(string playerId, MinigameType minigame, float minigameDuration)
+    public void StartMinigame(MinigameType minigame, float minigameDuration)
     {
         if (socket != null && socket.Connected)
         {
             var data = new 
             { 
-                playerId,
                 minigame = minigame.ToString(),
                 duration = minigameDuration
             };
+
             socket.Emit("MINIGAME_START", data);
-            Debug.Log($"Minigame {minigame} started for player {playerId}");
+
+            Debug.Log($"Minigame {minigame} started");
         }
     }
 

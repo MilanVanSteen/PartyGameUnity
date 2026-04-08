@@ -63,10 +63,7 @@ public class MinigameManager : MonoBehaviour
         minigameActive = true;
 
         // Tell website to start the minigame
-        foreach (var player in players)
-        {
-            SocketManager.Instance.StartMinigameForPlayer(player.playerId, minigame, minigameDuration);
-        }
+        SocketManager.Instance.StartMinigame(minigame, 15f);
 
         Debug.Log($"Minigame phase started: {minigame}, duration: {minigameDuration}s");
     }
