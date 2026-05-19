@@ -8,12 +8,7 @@ public class MinigameManager : MonoBehaviour
     //[SerializeField] private GameObject minigamePanelPrefab;
     //private GameObject activePanel;
 
-    private List<Player> players;
-
-    // Timer
-    private float minigameTimer = 0f;
-    public readonly float minigameDuration = 15f;
-    private bool minigameActive = false;
+    private bool minigameActive;
 
     private void Awake()
     {
@@ -27,77 +22,44 @@ public class MinigameManager : MonoBehaviour
         }
     }
 
-    private void Update()
+    public void StartMinigame(MinigameType minigame, float duration)
     {
-        // Timer for minigame
-        if (BoardManager.Instance.currentPhase == GamePhase.Minigame && minigameActive)
-        {
-            minigameTimer -= Time.deltaTime;
-
-            if (minigameTimer <= 0f)
-            {
-                Debug.Log("Minigame timer expired!");
-                minigameActive = false;
-                minigameTimer = 0f;
-
-                SocketManager.Instance.NotifyMinigameEnded();
-
-                foreach (Player player in players.ToArray())
-                {
-                    OnPlayerFinishedMinigame(player.playerId, false);
-                }
-            }
-        }
-    }
-
-    public void StartMinigame(List<Player> currentPlayers, MinigameType minigame)
-    {
-        players = new List<Player>(currentPlayers);
-
         // Show UI
         //activePanel = Instantiate(minigamePanelPrefab);
         //activePanel.SetActive(true);
 
-        // Reset and start timer
-        minigameTimer = minigameDuration;
         minigameActive = true;
 
         // Tell website to start the minigame
-        SocketManager.Instance.StartMinigame(minigame, 15f);
+        SocketManager.Instance.StartMinigame(minigame, duration);
 
-        Debug.Log($"Minigame phase started: {minigame}, duration: {minigameDuration}s");
+        Debug.Log($"Minigame phase started: {minigame}, duration: {duration}s");
     }
 
-    public void OnPlayerFinishedMinigame(string playerId, bool correct)
-    {
-        if (!players.Exists(p => p.playerId == playerId)) return;
-
-        Player player = players.Find(p => p.playerId == playerId);
-
-        if (correct)
-        {
-            PowerupType randomPowerup = player.GetRandomPowerup();
-            player.PlayerState.inventory.Add(randomPowerup);
-            Debug.Log($"{player.playerId} answered correctly and received powerup: " + randomPowerup);
-        }
-        else
-        {
-            Debug.Log($"{player.playerId} answered incorrectly.");
-        }
-
-        players.Remove(player);
-
-        // When all finished
-        if (players.Count == 0)
-        {
-            EndMinigamePhase();
-        }
-    }
-
-    private void EndMinigamePhase()
+    public void OnResults(string[] winners, Dictionary<string, int> scores)
     {
         minigameActive = false;
-        //Destroy(activePanel);
+
+        Debug.Log("Minigame finished!");
+
+        foreach (var kvp in scores)
+        {
+            Debug.Log($"Player {kvp.Key} score: {kvp.Value}");
+        }
+
+        // 1. Reward phase
+        foreach (var winnerId in winners)
+        {
+            if (BoardManager.Instance.TryGetPlayer(winnerId, out Player player))
+            {
+                PowerupType reward = player.GetRandomPowerup();
+                player.PlayerState.inventory.Add(reward);
+
+                Debug.Log($"{player.playerId} WON → got {reward}");
+            }
+        }
+
+        // 2. Continue next turn
         Debug.Log("Minigame phase ended!");
         BoardManager.Instance.StartNextTurn();
     }

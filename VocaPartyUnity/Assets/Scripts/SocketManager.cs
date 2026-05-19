@@ -61,8 +61,8 @@ public class SocketManager : MonoBehaviour
         socket.On("EXTRA_ROLL_RESULT", OnExtraRollResult);
         socket.On("POWERUP_SKIPPED", OnPowerupSkipped);
         socket.On("POWERUP_PHASE_FORCE_END", OnEndPowerupPhase);
-        socket.On("PLAYER_FINISHED_MINIGAME", OnFinishedMinigame);
-
+        socket.On("MINIGAME_RESULTS", OnMinigameResults);
+    
         // Connect
         socket.Connect();
         socket.OnConnected += (sender, e) =>
@@ -348,12 +348,17 @@ public class SocketManager : MonoBehaviour
         });
     }
 
+    [Serializable]
+    public class PowerupSkippedData
+    {
+        public string playerId;
+    }
     private void OnPowerupSkipped(SocketIOResponse response)
     {
         Debug.Log("Player skipped powerup.");
 
         string rawJson = response.GetValue().ToString();
-        var data = JsonConvert.DeserializeObject<MinigameFinishData>(rawJson);
+        var data = JsonConvert.DeserializeObject<PowerupSkippedData>(rawJson);
         
         MainThreadDispatcher.RunOnMainThread(() =>
         {
@@ -391,26 +396,26 @@ public class SocketManager : MonoBehaviour
         }
     }
 
-    public void NotifyMinigameEnded()
+    [Serializable]
+    public class MinigameResults
     {
-        socket.Emit("MINIGAME_END");
-    }
-    private void OnFinishedMinigame(SocketIOResponse response)
-    {
-        string rawJson = response.GetValue().ToString();
-        var data = JsonConvert.DeserializeObject<MinigameFinishData>(rawJson);
-        
-        MainThreadDispatcher.RunOnMainThread(() =>
-        {
-            MinigameManager.Instance.OnPlayerFinishedMinigame(data.playerId, data.correct);
-        });
+        public string[] winners;
+        public Newtonsoft.Json.Linq.JObject scores;
     }
 
-    [Serializable]
-    public class MinigameFinishData
+    private void OnMinigameResults(SocketIOResponse response)
     {
-        public string playerId;
-        public bool correct;
+        string rawJson = response.GetValue().ToString();
+        var data = JsonConvert.DeserializeObject<MinigameResults>(rawJson);
+
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            Debug.Log("Minigame finished!");
+
+            var scoresDict = data.scores.ToObject<Dictionary<string, int>>();
+
+            MinigameManager.Instance.OnResults(data.winners, scoresDict);
+        });
     }
 
 

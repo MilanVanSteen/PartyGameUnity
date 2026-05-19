@@ -25,14 +25,7 @@ public class BoardManager : MonoBehaviour
     public List<Player> powerUpPlayers;
 
     // Minigames
-    private List<MinigameType> availableMinigames = new()
-    {
-        MinigameType.TypingAnswer,
-        MinigameType.MultipleChoice,
-        MinigameType.FillInBlank,
-        MinigameType.SpotError,
-        MinigameType.DartThrow
-    };
+    private MinigameType[] availableMinigames;
 
     private void Awake()
     {
@@ -45,6 +38,8 @@ public class BoardManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        availableMinigames = (MinigameType[])System.Enum.GetValues(typeof(MinigameType));
     }
 
     public void InitializeBoard(PlayerList playerList)
@@ -361,11 +356,12 @@ public class BoardManager : MonoBehaviour
 
         currentPhase = GamePhase.Minigame;
 
-        MinigameType selectedMinigame = availableMinigames[Random.Range(0, availableMinigames.Count)];
+        MinigameType selectedMinigame = availableMinigames[Random.Range(0, availableMinigames.Length)];
         Debug.Log("Selected Minigame: " + selectedMinigame);
+        float minigameDuration = 25f; // You can adjust this or make it dynamic based on the minigame
 
         // Start minigame manager
-        MinigameManager.Instance.StartMinigame(players, selectedMinigame);
+        MinigameManager.Instance.StartMinigame(selectedMinigame, minigameDuration);
     }
 
     public void StartNextTurn()

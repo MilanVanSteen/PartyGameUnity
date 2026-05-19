@@ -1,8 +1,7 @@
 public enum MinigameType
 {
-    TypingAnswer,
-    MultipleChoice,
-    FillInBlank,
-    SpotError,
-    DartThrow
+    WordRush,
+    MemoryMatch,
+    WordSnake,
+    TrapChoice,
 }
