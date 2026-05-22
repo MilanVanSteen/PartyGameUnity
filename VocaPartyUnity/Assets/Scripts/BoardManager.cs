@@ -27,6 +27,11 @@ public class BoardManager : MonoBehaviour
     // Minigames
     private MinigameType[] availableMinigames;
 
+    // Minigame timer
+    private float minigameTimer = 0f;
+    public float minigamePhaseDuration = 30f;
+    private bool minigameEnding = false;
+
     private void Awake()
     {
         if (Instance == null)
@@ -52,7 +57,7 @@ public class BoardManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("No GameObject with tag 'StartingTile' found in the scene!");
+            Debug.LogError("BoardManager: No GameObject with tag 'StartingTile' found in the scene!");
             return;
         }
 
@@ -66,7 +71,7 @@ public class BoardManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError("No PlayerContainer found in the scene!");
+                Debug.LogError("BoardManager: No PlayerContainer found in the scene!");
             }
         }
 
@@ -91,6 +96,17 @@ public class BoardManager : MonoBehaviour
             if (powerupTimer <= 0f && extraRollsPending == 0)
             {
                 EndPowerupPhase();
+            }
+        }
+
+        // Timer for minigame phase
+        if (currentPhase == GamePhase.Minigame)
+        {
+            minigameTimer -= Time.deltaTime;
+
+            if (minigameTimer <= 0f && extraRollsPending == 0)
+            {
+                EndMinigamePhase();
             }
         }
     }
@@ -132,60 +148,62 @@ public class BoardManager : MonoBehaviour
 
     public bool TryGetPlayer(string playerId, out Player player)
     {
-        Debug.Log("Trying to get player..." + playerId);
+        Debug.Log("BoardManager: Trying to get player..." + playerId);
         return playerDict.TryGetValue(playerId, out player);
     }
 
     public void RegisterMovingPlayer()
     {
-        currentPhase = GamePhase.Movement;
         playersMoving++;
-        Debug.Log("Players moving now: " + playersMoving);
+        Debug.Log("BoardManager: Players moving now: " + playersMoving);
+
+        if (currentPhase == GamePhase.DiceRoll)
+        {
+            currentPhase = GamePhase.Movement;
+        }
     }
 
     public void PlayerFinishedMoving()
     {
         playersMoving--;
-        Debug.Log("Player finished moving. Remaining: " + playersMoving);
+        Debug.Log("BoardManager: Player finished moving. Remaining: " + playersMoving);
 
         if (playersMoving == 0)
         {
-            Debug.Log("All players finished moving!");
+            Debug.Log("BoardManager: All players finished moving!");
             AllPlayersFinished();
         }
 
         if (playersMoving < 0)
         {
-            Debug.LogError("playersMoving went negative!");
+            Debug.LogError("BoardManager: playersMoving went negative!");
             playersMoving = 0;
         }
     }
     private void AllPlayersFinished()
     {
-        if (currentPhase != GamePhase.Movement)
+        Debug.Log("BoardManager: Currentphase: " + currentPhase);
+        if (currentPhase == GamePhase.Movement)
         {
-            Debug.LogWarning("AllPlayersFinished called outside Movement phase!");
-            return;
+            StartPowerUpPhase();
         }
-
-        StartPowerUpPhase();
     }
 
     public void ResetMovementCounter()
     {
-        Debug.Log("Resetting movement counter");
+        Debug.Log("BoardManager: Resetting movement counter");
         playersMoving = 0;
     }
 
     private void StartPowerUpPhase()
     {
-        if (currentPhase == GamePhase.Powerup)
+        if (currentPhase != GamePhase.Movement)
         {
-            Debug.LogWarning("Powerup phase already active!");
+            Debug.LogWarning("BoardManager: Powerup phase already active!");
             return;
         }
 
-        Debug.Log("Starting powerup phase...");
+        Debug.Log("BoardManager: Starting powerup phase...");
 
         currentPhase = GamePhase.Powerup;
         powerupTimer = powerupPhaseDuration;
@@ -198,7 +216,7 @@ public class BoardManager : MonoBehaviour
 
             if (state.inventory.Count > 0)
             {
-                Debug.Log("Player " + state.playerIndex + " can use powerups.");
+                Debug.Log("BoardManager: Player " + state.playerIndex + " can use powerups.");
             }
 
             SocketManager.Instance.SendPowerUpInventory(
@@ -209,7 +227,7 @@ public class BoardManager : MonoBehaviour
     }
     public void EndPowerupPhase()
     {        
-        Debug.Log("Powerup phase ended!");
+        Debug.Log("BoardManager: Powerup phase ended!");
 
         SocketManager.Instance.NotifyPowerupPhaseEnded();
 
@@ -229,13 +247,11 @@ public class BoardManager : MonoBehaviour
             if (inventoryIndex < state.inventory.Count)
             {
                 PowerupType powerup = state.inventory[inventoryIndex];
-                Debug.Log("Before use: " + string.Join(", ", state.inventory));
                 StartCoroutine(ExecutePowerup(player, powerup));
                 state.inventory.RemoveAt(inventoryIndex);
-                Debug.Log("After use: " + string.Join(", ", state.inventory));
             }
+            Debug.Log($"BoardManager: Player {player.playerId} selected powerup.");
             OnPlayerSelectedPowerup(player.playerId);
-            
         }
     }
     private IEnumerator ExecutePowerup(Player player, PowerupType powerup)
@@ -245,20 +261,17 @@ public class BoardManager : MonoBehaviour
         switch (powerup)
         {
             case PowerupType.ExtraRoll:
-                Debug.Log($"Reach this?");
                 yield return ExecuteExtraRoll(player);
                 break;
 
-            // Make better (see below dice upon roll that gets extra)
+            // Make better (see below the dice roll that gets extra)
             case PowerupType.AddedSteps:
-                Debug.Log("Next roll +2");
                 player.PlayerState.addedStepsNextRoll += 2;
                 break;
 
-            // Make better (visual)
+            // Make better (visual in Unity)
             case PowerupType.Shield:
-                Debug.Log("Shield activated for 2 turns");
-                player.PlayerState.shieldTurns += 3; // Extra turn because 1 get instantly taken since turn ends afterwards
+                player.PlayerState.shieldTurns += 3; // Extra turn because 1 gets instantly taken since turn ends afterwards
                 break;
 
             // Make better (choice on website)
@@ -307,9 +320,9 @@ public class BoardManager : MonoBehaviour
 
     private IEnumerator ExecuteExtraRoll(Player player)
     {
-        Debug.Log($"{player.gameObject.name} requested ExtraRoll");
-
         extraRollsPending++;
+
+        Debug.Log($"BoardManager: {player.gameObject.name} requested ExtraRoll, total pending: {extraRollsPending}");
 
         // Ask website to roll dice for this player only
         SocketManager.Instance.RequestExtraRoll(player.playerId);
@@ -320,9 +333,12 @@ public class BoardManager : MonoBehaviour
     {
         extraRollsPending--;
 
-        Debug.Log($"ExtraRoll finished for {playerId}. Remaining: {extraRollsPending}");
+        Debug.Log($"BoardManager: ExtraRoll finished for {playerId}. Remaining: {extraRollsPending}");
 
-        if (extraRollsPending < 0) extraRollsPending = 0;
+        if (extraRollsPending < 0) 
+        {
+            extraRollsPending = 0;
+        }
     }
     public bool HasNoPendingExtraRolls()
     {
@@ -338,8 +354,9 @@ public class BoardManager : MonoBehaviour
         powerUpPlayers.Remove(player);
 
         // When all finished
-        if (powerUpPlayers.Count == 0)
+        if (powerUpPlayers.Count == 0 && extraRollsPending == 0)
         {
+            Debug.Log($"BoardManager: Ending powerup phase: all players selected and no pending extra rolls.");
             EndPowerupPhase();
         }
     }
@@ -348,32 +365,89 @@ public class BoardManager : MonoBehaviour
     {
         if (currentPhase == GamePhase.Minigame)
         {
-            Debug.LogWarning("Minigame phase already active!");
+            Debug.LogWarning("BoardManager: Minigame phase already active!");
             return;
         }
 
-        Debug.Log("Starting Minigame Phase...");
-
+        Debug.Log("BoardManager: Starting Minigame Phase...");
         currentPhase = GamePhase.Minigame;
+        minigameEnding = false;
 
-        MinigameType selectedMinigame = availableMinigames[Random.Range(0, availableMinigames.Length)];
-        Debug.Log("Selected Minigame: " + selectedMinigame);
-        float minigameDuration = 25f; // You can adjust this or make it dynamic based on the minigame
+        MinigameType selectedMinigame = GetRandomMinigame();
+        Debug.Log("BoardManager: Selected Minigame: " + selectedMinigame);
+
+        switch (selectedMinigame)
+        {
+            case MinigameType.WordRushNL:
+                minigamePhaseDuration = 30f;
+                break;
+
+            case MinigameType.WordRushEN:
+                minigamePhaseDuration = 30f;
+                break;
+
+            case MinigameType.MemoryMatch:
+                minigamePhaseDuration = 20f;
+                break;
+
+            case MinigameType.WordSnake:
+                minigamePhaseDuration = 30f;
+                break;
+            
+            case MinigameType.RocketFuel:
+                minigamePhaseDuration = 25f;
+                break;
+            
+            default:
+                minigamePhaseDuration = 30f;
+                break;
+        }
+        minigameTimer = minigamePhaseDuration;
 
         // Start minigame manager
-        MinigameManager.Instance.StartMinigame(selectedMinigame, minigameDuration);
+        MinigameManager.Instance.StartMinigame(selectedMinigame, minigamePhaseDuration);
+    }
+    private MinigameType lastMinigame;
+    private MinigameType GetRandomMinigame()
+    {
+        MinigameType selected;
+
+        int safety = 0;
+
+        do
+        {
+            selected = availableMinigames[Random.Range(0, availableMinigames.Length)];
+            safety++;
+        }
+        while (selected == lastMinigame && safety < 10);
+
+        lastMinigame = selected;
+        return selected;
+    }
+
+    public void EndMinigamePhase()
+    {
+        // Prevent this from running multiple times
+        if (currentPhase != GamePhase.Minigame) return;
+        if (minigameEnding) return;
+
+        minigameEnding = true;
+
+        Debug.Log("BoardManager: Minigame phase ended!");
+
+        // Tell all website clients to close the minigame screen
+        SocketManager.Instance.NotifyMinigamePhaseEnded();
     }
 
     public void StartNextTurn()
     {
         currentPhase = GamePhase.WaitingForRoll; //Later goes automatically
-        Debug.Log("Next turn started, waiting for dice roll...");
     }
 
     public void HandleFinish(Player player)
     {
         player.PlayerState.hasFinished = true;
-        Debug.Log($"{player.playerId} has reached the finish!");
+        Debug.Log($"BoardManager: {player.playerId} has reached the finish!");
 
         // Stop further movement
         player.PlayerState.canMove = false;
@@ -383,7 +457,7 @@ public class BoardManager : MonoBehaviour
 
     private void EndGame()
     {
-        Debug.Log("Game Over! Final standings:");
+        Debug.Log("BoardManager: Game Over! Final standings:");
         for (int i = 0; i < players.Count; i++)
         {
             Debug.Log($"{i + 1}. {players[i].gameObject.name}");

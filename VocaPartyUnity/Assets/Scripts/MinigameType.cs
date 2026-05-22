@@ -1,7 +1,9 @@
 public enum MinigameType
 {
-    WordRush,
+    WordRushNL,
+    WordRushEN,
     MemoryMatch,
     WordSnake,
+    RocketFuel,
     TrapChoice,
 }

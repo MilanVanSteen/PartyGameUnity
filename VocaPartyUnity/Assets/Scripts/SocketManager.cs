@@ -58,10 +58,10 @@ public class SocketManager : MonoBehaviour
         socket.On("GAME_STARTED", OnGameStarted);
         socket.On("PLAYER_MOVE", OnPlayerMove);
         socket.On("POWERUP_SELECTED", OnPowerupSelected);
-        socket.On("EXTRA_ROLL_RESULT", OnExtraRollResult);
         socket.On("POWERUP_SKIPPED", OnPowerupSkipped);
         socket.On("POWERUP_PHASE_FORCE_END", OnEndPowerupPhase);
         socket.On("MINIGAME_RESULTS", OnMinigameResults);
+        socket.On("MINIGAME_PHASE_FORCE_END", OnEndMinigamePhase);
     
         // Connect
         socket.Connect();
@@ -74,17 +74,17 @@ public class SocketManager : MonoBehaviour
         // Debug
         socket.OnDisconnected += (sender, e) =>
         {
-            Debug.LogWarning("Socket disconnected!");
+            Debug.LogWarning("SocketManager: Socket disconnected!");
         };
 
         socket.OnReconnectAttempt += (sender, e) =>
         {
-            Debug.Log("Reconnecting...");
+            Debug.Log("SocketManager: Reconnecting...");
         };
 
         socket.OnReconnected += (sender, e) =>
         {
-            Debug.Log("Reconnected!");
+            Debug.Log("SocketManager: Reconnected!");
         };
     }
 
@@ -100,7 +100,7 @@ public class SocketManager : MonoBehaviour
         RoomCodeRaw roomCodeRaw = JsonConvert.DeserializeObject<RoomCodeRaw>(rawJson);
 
         string roomCode = roomCodeRaw.roomCode;
-        Debug.Log("Room code: " + roomCode);
+        Debug.Log("SocketManager: Room code: " + roomCode);
 
         // Update UI
         MainThreadDispatcher.RunOnMainThread(() =>
@@ -112,7 +112,7 @@ public class SocketManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("No LobbyManager in this scene, skipping UI update");
+                Debug.LogWarning("SocketManager: No LobbyManager in this scene, skipping UI update");
             }
         });
     }
@@ -131,13 +131,13 @@ public class SocketManager : MonoBehaviour
         // Player error handling
         if (data?.players == null || data.players.Length == 0)
         {
-            Debug.Log("No players in room yet.");
+            Debug.Log("SocketManager: No players in room yet.");
             return;
         }
 
         // Pick the last player who joined to show
         WebPlayer newPlayer = data.players[data.players.Length - 1];
-        Debug.Log($"Player joined: {newPlayer.name} ({newPlayer.id})");
+        Debug.Log($"SocketManager: Player joined: {newPlayer.name} ({newPlayer.id})");
 
         // Update UI
         MainThreadDispatcher.RunOnMainThread(() =>
@@ -148,7 +148,7 @@ public class SocketManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("No LobbyManager in this scene, skipping UI update");
+                Debug.LogWarning("SocketManager: No LobbyManager in this scene, skipping UI update");
             }
         });
 
@@ -157,16 +157,13 @@ public class SocketManager : MonoBehaviour
 
     public void StartGame()
     {
-        Debug.Log("Start button pressed → sending START_GAME");
-        Debug.Log("Socket connected? " + socket.Connected);
+        Debug.Log("SocketManager: Socket connected? " + socket.Connected);
 
         socket.Emit("START_GAME", new { });
     }
 
     private void OnGameStarted(SocketIOResponse response)
     {
-        Debug.Log("Game is starting!");
-
         // Save playerList
         string rawJson = response.GetValue().ToString();
         PlayerList data = JsonConvert.DeserializeObject<PlayerList>(rawJson);
@@ -179,8 +176,6 @@ public class SocketManager : MonoBehaviour
     }
     private void StartGameClient()
     {
-        Debug.Log("Loading game scene...");
-
         SceneManager.LoadScene("SampleScene"); // Change to actual next scene later
     }
 
@@ -201,19 +196,19 @@ public class SocketManager : MonoBehaviour
     {
         if (BoardManager.Instance.currentPhase == GamePhase.DiceRoll)
         {
-            Debug.Log("Dice roll already active.");
+            Debug.LogWarning("SocketManager: Dice roll already active.");
             return;
         }
 
         if (socket != null && socket.Connected)
         {
             BoardManager.Instance.currentPhase = GamePhase.DiceRoll;
-            Debug.Log("Host triggering dice roll...");
+            Debug.Log("Dice roll...");
             socket.Emit("ROLL_DICE");
         }
         else
         {
-            Debug.LogWarning("Socket not connected. Cannot roll dice.");
+            Debug.LogWarning("SocketManager: Socket not connected. Cannot roll dice.");
         }
     }
 
@@ -222,17 +217,18 @@ public class SocketManager : MonoBehaviour
         string rawJson = response.GetValue().ToString();
         PlayerMoveList moveList = JsonConvert.DeserializeObject<PlayerMoveList>(rawJson);
 
-        Debug.Log("All dice rolls finished, moving players...");
+        Debug.Log("SocketManager: All dice rolls finished, moving players...");
 
         BoardManager.Instance.ResetMovementCounter();
-        BoardManager.Instance.currentPhase = GamePhase.Movement;
+        if (BoardManager.Instance.currentPhase == GamePhase.DiceRoll)
+        {
+            BoardManager.Instance.currentPhase = GamePhase.Movement;
+        }
 
         MainThreadDispatcher.RunOnMainThread(() =>
         {
-            Debug.Log("Inside thread now...");
             foreach (var move in moveList.moves)
             {
-                Debug.Log("Foreach is handling...");
                 if (BoardManager.Instance.TryGetPlayer(move.playerId, out Player player))
                 {
                     if(player.PlayerState.canMove && player.PlayerState.CanPlayTurn())
@@ -240,11 +236,16 @@ public class SocketManager : MonoBehaviour
                         BoardManager.Instance.RegisterMovingPlayer();
 
                         player.MoveSteps(move.roll); // Move the player in Unity
+
+                        if(BoardManager.Instance.currentPhase == GamePhase.Powerup)
+                        {
+                            BoardManager.Instance.OnExtraRollFinished(move.playerId);
+                        }
                     }
                 }
                 else
                 {
-                    Debug.LogWarning("Player not found: " + move.playerId);
+                    Debug.LogWarning("SocketManager: Player not found: " + move.playerId);
                 }
             }
         });
@@ -268,13 +269,11 @@ public class SocketManager : MonoBehaviour
                 duration
             };
 
-            Debug.Log($"Sending inventory to {playerId}");
-
             socket.Emit("POWERUP_PHASE_START", data);
         }
         else
         {
-            Debug.LogWarning("Socket not connected. Cannot send inventory.");
+            Debug.LogWarning("SocketManager: Socket not connected. Cannot send inventory.");
         }
     }
 
@@ -303,10 +302,12 @@ public class SocketManager : MonoBehaviour
 
     public void RequestExtraRoll(string playerId)
     {
+        Debug.Log("0 Current game phase: " + BoardManager.Instance.currentPhase);
+
         if (socket != null && socket.Connected)
         {
             socket.Emit("REQUEST_EXTRA_ROLL", new { playerId });
-            Debug.Log($"Requested ExtraRoll for player {playerId}");
+            Debug.Log($"SocketManager: Requested ExtraRoll for player {playerId}");
         }
     }
 
@@ -315,37 +316,8 @@ public class SocketManager : MonoBehaviour
         if (socket != null && socket.Connected)
         {
             socket.Emit("SHIELD_EXPIRED", new { playerId });
-            Debug.Log($"Sent SHIELD_EXPIRED for player {playerId}");
+            Debug.Log($"SocketManager: Sent SHIELD_EXPIRED for player {playerId}");
         }
-    }
-
-    [Serializable]
-    public class ExtraRollResult
-    {
-        public string playerId;
-        public int roll;
-    }
-    private void OnExtraRollResult(SocketIOResponse response)
-    {
-        string rawJson = response.GetValue().ToString();
-        ExtraRollResult result = JsonConvert.DeserializeObject<ExtraRollResult>(rawJson);
-
-        MainThreadDispatcher.RunOnMainThread(() =>
-        {
-            if (BoardManager.Instance.TryGetPlayer(result.playerId, out Player player))
-            {
-                Debug.Log($"Extra roll received for {player.PlayerState.playerIndex}: {result.roll}");
-                // Trigger the player's movement
-                BoardManager.Instance.RegisterMovingPlayer();
-                player.MoveSteps(result.roll); // Or MoveStepsCoroutine if you want animation
-
-                BoardManager.Instance.OnExtraRollFinished(result.playerId);
-            }
-            else
-            {
-                Debug.LogWarning("Extra roll: player not found: " + result.playerId);
-            }
-        });
     }
 
     [Serializable]
@@ -355,8 +327,6 @@ public class SocketManager : MonoBehaviour
     }
     private void OnPowerupSkipped(SocketIOResponse response)
     {
-        Debug.Log("Player skipped powerup.");
-
         string rawJson = response.GetValue().ToString();
         var data = JsonConvert.DeserializeObject<PowerupSkippedData>(rawJson);
         
@@ -375,7 +345,7 @@ public class SocketManager : MonoBehaviour
         BoardManager boardManager = BoardManager.Instance;
         if (boardManager.currentPhase == GamePhase.Powerup && boardManager.HasNoPendingExtraRolls())
         {
-            Debug.Log("Website ended powerup phase.");
+            Debug.Log("SocketManager: Website ended powerup phase.");
             boardManager.EndPowerupPhase();
         }
     }
@@ -390,9 +360,46 @@ public class SocketManager : MonoBehaviour
                 duration = minigameDuration
             };
 
+            minigameEnding = false;
+
             socket.Emit("MINIGAME_START", data);
 
-            Debug.Log($"Minigame {minigame} started");
+            Debug.Log($"SocketManager: Minigame {minigame} started");
+        }
+    }
+
+    private bool minigameEnding = false;
+    private void OnEndMinigamePhase(SocketIOResponse response)
+    {
+        if (minigameEnding)
+        {
+            Debug.Log("Minigame already ending.");
+            return;
+        }
+
+        if (BoardManager.Instance.currentPhase != GamePhase.Minigame)
+        {
+            Debug.Log("Not in minigame phase.");
+            return;
+        }
+
+        minigameEnding = true;
+
+        Debug.Log("SocketManager: Website ended minigame phase.");
+
+        NotifyMinigamePhaseEnded();
+    }
+
+    public void NotifyMinigamePhaseEnded()
+    {
+        if (socket != null && socket.Connected)
+        {
+            socket.Emit("MINIGAME_PHASE_END");
+            Debug.Log("SocketManager: Sent MINIGAME_PHASE_END");
+        }
+        else
+        {
+            Debug.LogWarning("SocketManager: Socket not connected. Cannot send MINIGAME_PHASE_END.");
         }
     }
 
@@ -410,7 +417,7 @@ public class SocketManager : MonoBehaviour
 
         MainThreadDispatcher.RunOnMainThread(() =>
         {
-            Debug.Log("Minigame finished!");
+            Debug.Log("SocketManager: Minigame finished!");
 
             var scoresDict = data.scores.ToObject<Dictionary<string, int>>();
 

@@ -8,8 +8,6 @@ public class MinigameManager : MonoBehaviour
     //[SerializeField] private GameObject minigamePanelPrefab;
     //private GameObject activePanel;
 
-    private bool minigameActive;
-
     private void Awake()
     {
         if (Instance == null)
@@ -28,23 +26,19 @@ public class MinigameManager : MonoBehaviour
         //activePanel = Instantiate(minigamePanelPrefab);
         //activePanel.SetActive(true);
 
-        minigameActive = true;
-
         // Tell website to start the minigame
         SocketManager.Instance.StartMinigame(minigame, duration);
 
-        Debug.Log($"Minigame phase started: {minigame}, duration: {duration}s");
+        Debug.Log($"MinigameManager: Minigame phase started: {minigame}, duration: {duration}s");
     }
 
     public void OnResults(string[] winners, Dictionary<string, int> scores)
     {
-        minigameActive = false;
-
-        Debug.Log("Minigame finished!");
+        Debug.Log("MinigameManager: Minigame finished!");
 
         foreach (var kvp in scores)
         {
-            Debug.Log($"Player {kvp.Key} score: {kvp.Value}");
+            Debug.Log($"MinigameManager: Player {kvp.Key} score: {kvp.Value}");
         }
 
         // 1. Reward phase
@@ -55,12 +49,12 @@ public class MinigameManager : MonoBehaviour
                 PowerupType reward = player.GetRandomPowerup();
                 player.PlayerState.inventory.Add(reward);
 
-                Debug.Log($"{player.playerId} WON → got {reward}");
+                Debug.Log($"MinigameManager: {player.playerId} WON → got {reward}");
             }
         }
 
         // 2. Continue next turn
-        Debug.Log("Minigame phase ended!");
+        Debug.Log("MinigameManager: Minigame phase ended!");
         BoardManager.Instance.StartNextTurn();
     }
 }

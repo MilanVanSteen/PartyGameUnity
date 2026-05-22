@@ -12,8 +12,6 @@ public class LobbyManager : MonoBehaviour
     
     public void SetRoomCode(string roomCode)
     {
-        Debug.Log("Updating UI: " + roomCode);
-
         if (roomCodeText != null)
         {
             roomCodeText.text = roomCode;
@@ -27,7 +25,7 @@ public class LobbyManager : MonoBehaviour
         {
             if (!playerEntries.ContainsKey(p.id))
             {
-                Debug.Log("Spawning player UI: " + p.name);
+                Debug.Log("LobbyManager: Spawning player UI: " + p.name);
                 GameObject entry = Instantiate(playerEntryPrefab, playerListContainer);
                 entry.GetComponentInChildren<TMP_Text>().text = string.IsNullOrEmpty(p.name) ? "HOST" : p.name;
                 playerEntries[p.id] = entry;

@@ -45,6 +45,7 @@ public class Player : MonoBehaviour
 
     public void MoveSteps(int steps)
     {
+        Debug.Log("PLayer 1 Current game phase: " + BoardManager.Instance.currentPhase);
         if (PlayerState.isMoving) return;
 
         // Added Steps powerup handling
