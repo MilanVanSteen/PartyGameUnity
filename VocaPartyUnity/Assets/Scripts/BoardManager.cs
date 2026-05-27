@@ -88,6 +88,8 @@ public class BoardManager : MonoBehaviour
 
     private void Update()
     {
+        if (!IsGameActive()) return;
+
         // Timer for powerup phase
         if (currentPhase == GamePhase.Powerup)
         {
@@ -154,6 +156,8 @@ public class BoardManager : MonoBehaviour
 
     public void RegisterMovingPlayer()
     {
+        if (!IsGameActive()) return;
+
         playersMoving++;
         Debug.Log("BoardManager: Players moving now: " + playersMoving);
 
@@ -165,6 +169,8 @@ public class BoardManager : MonoBehaviour
 
     public void PlayerFinishedMoving()
     {
+        if (!IsGameActive()) return;
+
         playersMoving--;
         Debug.Log("BoardManager: Player finished moving. Remaining: " + playersMoving);
 
@@ -182,7 +188,8 @@ public class BoardManager : MonoBehaviour
     }
     private void AllPlayersFinished()
     {
-        Debug.Log("BoardManager: Currentphase: " + currentPhase);
+        if (!IsGameActive()) return;
+
         if (currentPhase == GamePhase.Movement)
         {
             StartPowerUpPhase();
@@ -197,6 +204,7 @@ public class BoardManager : MonoBehaviour
 
     private void StartPowerUpPhase()
     {
+        if (!IsGameActive()) return;
         if (currentPhase != GamePhase.Movement)
         {
             Debug.LogWarning("BoardManager: Powerup phase already active!");
@@ -227,6 +235,7 @@ public class BoardManager : MonoBehaviour
     }
     public void EndPowerupPhase()
     {        
+        if (!IsGameActive()) return;
         Debug.Log("BoardManager: Powerup phase ended!");
 
         SocketManager.Instance.NotifyPowerupPhaseEnded();
@@ -363,6 +372,7 @@ public class BoardManager : MonoBehaviour
 
     private void StartMinigamePhase()
     {
+        if (!IsGameActive()) return;
         if (currentPhase == GamePhase.Minigame)
         {
             Debug.LogWarning("BoardManager: Minigame phase already active!");
@@ -427,6 +437,7 @@ public class BoardManager : MonoBehaviour
 
     public void EndMinigamePhase()
     {
+        if (!IsGameActive()) return;
         // Prevent this from running multiple times
         if (currentPhase != GamePhase.Minigame) return;
         if (minigameEnding) return;
@@ -446,23 +457,23 @@ public class BoardManager : MonoBehaviour
 
     public void HandleFinish(Player player)
     {
-        player.PlayerState.hasFinished = true;
-        Debug.Log($"BoardManager: {player.playerId} has reached the finish!");
+        if (currentPhase == GamePhase.GameOver) return;
 
-        // Stop further movement
+        player.PlayerState.hasFinished = true;
         player.PlayerState.canMove = false;
 
-        EndGame();
+        if (GameData.WinnerName != null) return;
+
+        GameData.WinnerName = player.playerName;
+        Debug.Log($"BoardManager: {player.playerName} has reached the finish!");
+
+        currentPhase = GamePhase.GameOver;
+
+        SocketManager.Instance.EndGame(player.playerName);
     }
 
-    private void EndGame()
+    private bool IsGameActive()
     {
-        Debug.Log("BoardManager: Game Over! Final standings:");
-        for (int i = 0; i < players.Count; i++)
-        {
-            Debug.Log($"{i + 1}. {players[i].gameObject.name}");
-        }
-
-        // TODO: show UI, disable dice, etc.
+        return currentPhase != GamePhase.GameOver;
     }
 }

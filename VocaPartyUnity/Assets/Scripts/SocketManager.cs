@@ -62,6 +62,7 @@ public class SocketManager : MonoBehaviour
         socket.On("POWERUP_PHASE_FORCE_END", OnEndPowerupPhase);
         socket.On("MINIGAME_RESULTS", OnMinigameResults);
         socket.On("MINIGAME_PHASE_FORCE_END", OnEndMinigamePhase);
+        socket.On("GAME_ENDED", OnGameEnded);
     
         // Connect
         socket.Connect();
@@ -425,6 +426,27 @@ public class SocketManager : MonoBehaviour
         });
     }
 
+    public void EndGame(string playerName)
+    {
+        if (socket == null || !socket.Connected)
+        {
+            Debug.LogWarning("Socket not connected, cannot end game.");
+            return;
+        }
+        
+        socket.Emit("END_GAME", new
+        {
+            playerName
+        });
+    }
+
+    private void OnGameEnded(SocketIOResponse response)
+    {
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            SceneManager.LoadScene("EndScene");
+        });
+    }
 
     private void OnApplicationQuit()
     {

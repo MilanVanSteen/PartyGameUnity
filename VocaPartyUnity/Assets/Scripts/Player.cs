@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private string playerName;
+    public string playerName;
     public string playerId;
 
     public Color playerColor = Color.white;
@@ -69,6 +69,8 @@ public class Player : MonoBehaviour
             if (currentTile.neighbors.Count == 0) 
             {
                 Debug.Log("No neighbors, stopping movement safely.");
+
+                yield return HandleTileEffect();
 
                 PlayerState.isMoving = false;
                 BoardManager.Instance.PlayerFinishedMoving();
