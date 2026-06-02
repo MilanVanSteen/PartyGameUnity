@@ -18,7 +18,7 @@ public class Player : MonoBehaviour
         rend = GetComponentInChildren<Renderer>();
     }
 
-    public void Initialize(string id, Color color, int playerIndex)
+    public void Initialize(string id, Color color, int playerIndex, string name)
     {
         playerId = id;
         playerColor = color;
@@ -28,7 +28,7 @@ public class Player : MonoBehaviour
             rend.material.color = playerColor;
 
         gameObject.name = $"Player_{playerIndex}";
-        playerName = gameObject.name;
+        playerName = name;
     }
 
     public IEnumerator MoveStepsCoroutine(int steps)

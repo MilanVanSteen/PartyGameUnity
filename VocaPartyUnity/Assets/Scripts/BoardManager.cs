@@ -139,7 +139,7 @@ public class BoardManager : MonoBehaviour
 
         GameObject go = Instantiate(playerPrefab, playerContainer);
         Player player = go.GetComponent<Player>();
-        player.Initialize(wp.id, color, index);
+        player.Initialize(wp.id, color, index, wp.name);
 
         // Optionally set starting tile
         player.currentTile = startingTile; 
@@ -273,7 +273,6 @@ public class BoardManager : MonoBehaviour
                 yield return ExecuteExtraRoll(player);
                 break;
 
-            // Make better (see below the dice roll that gets extra)
             case PowerupType.AddedSteps:
                 player.PlayerState.addedStepsNextRoll += 2;
                 break;
