@@ -10,7 +10,7 @@ public class Player : MonoBehaviour
     private Renderer rend;
 
     public Tile currentTile;
-    public float moveSpeed = 3f;
+    public float moveSpeed = 2f;
     public PlayerState PlayerState { get; private set; }
     
     private void Awake(){
@@ -93,7 +93,7 @@ public class Player : MonoBehaviour
     private IEnumerator MoveToTile(Tile tile)
     {
         Vector3 start = transform.position;
-        Vector3 end = tile.transform.position + Vector3.up;
+        Vector3 end = tile.transform.position + BoardManager.Instance.tileOffset;
 
         float t = 0;
 

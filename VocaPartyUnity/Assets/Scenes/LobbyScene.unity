@@ -1328,9 +1328,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 563107942601278223, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
+      propertyPath: playerPrefab
+      value: 
+      objectReference: {fileID: 997154561038552860, guid: e39ac1ea959f6d04d9bcd8b749972fac, type: 3}
     - target: {fileID: 2336421068778731596, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
       propertyPath: m_Name
       value: GameManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 4460117314787677177, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
+      propertyPath: sceneToLoad
+      value: PirateMap
       objectReference: {fileID: 0}
     - target: {fileID: 5313217704320624773, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
       propertyPath: m_LocalPosition.x

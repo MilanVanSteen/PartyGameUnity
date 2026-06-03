@@ -6,7 +6,8 @@ public class BoardManager : MonoBehaviour
 {
     public static BoardManager Instance;
 
-    private GameObject playerPrefab;
+    [Header("Player Prefab")]
+    [SerializeField] private GameObject playerPrefab;
     private Transform playerContainer;
     private Tile startingTile;
 
@@ -61,29 +62,22 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        // Assign player container dynamically
         if (playerContainer == null)
         {
-            GameObject containerGO = GameObject.Find("PlayerContainer");
-            if (containerGO != null)
-            {
-                playerContainer = containerGO.transform;
-            }
-            else
+            playerContainer = GameObject.Find("PlayerContainer")?.transform;
+            if (playerContainer == null)
             {
                 Debug.LogError("BoardManager: No PlayerContainer found in the scene!");
             }
         }
 
-        // Assign player prefab dynamically (need to be in Resources)
+        // Assign player prefab dynamically if not set in inspector
         if (playerPrefab == null)
         {
-            playerPrefab = Resources.Load<GameObject>("Prefabs/PlayerPrefab");
+            playerPrefab = Resources.Load<GameObject>("Prefabs/Player");
         }
 
         RegisterNetworkPlayers(playerList);
-
-        // Other setup logic (tiles, UI, etc.)
     }
 
     private void Update()
@@ -131,6 +125,7 @@ public class BoardManager : MonoBehaviour
     }
 
     // Spawn or find existing player by ID
+    public readonly Vector3 tileOffset = new(0, 0.5f, 0);
     private Player FindOrSpawnPlayer(WebPlayer wp, int index, Color color)
     {
         // Check if player already exists in scene
@@ -143,7 +138,7 @@ public class BoardManager : MonoBehaviour
 
         // Optionally set starting tile
         player.currentTile = startingTile; 
-        player.transform.position = player.currentTile.transform.position + Vector3.up;
+        player.transform.position = player.currentTile.transform.position + tileOffset;
 
         return player;
     }
@@ -317,7 +312,7 @@ public class BoardManager : MonoBehaviour
                     {
                         if (tile.neighbors.Count > 0) tile = tile.neighbors[0]; // move backward along first neighbor for now
                     }
-                    target.transform.position = tile.transform.position + Vector3.up;
+                    target.transform.position = tile.transform.position;
                     target.currentTile = tile;
 
                     Debug.Log($"{player.PlayerState.playerIndex} sent {target.PlayerState.playerIndex} back 2 tiles");

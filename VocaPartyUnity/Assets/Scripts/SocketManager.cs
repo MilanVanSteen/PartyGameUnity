@@ -28,7 +28,7 @@ public class SocketManager : MonoBehaviour
     }
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "SampleScene") // Actual game scene later
+        if (scene.name == sceneToLoad) // Only initialize board on the actual game scene
         {
             Debug.Log("Scene loaded, initializing board...");
             BoardManager.Instance.InitializeBoard(GameData.CurrentPlayers);
@@ -163,6 +163,7 @@ public class SocketManager : MonoBehaviour
         socket.Emit("START_GAME", new { });
     }
 
+    public string sceneToLoad; // Change this to actual game map choice later
     private void OnGameStarted(SocketIOResponse response)
     {
         // Save playerList
@@ -177,7 +178,7 @@ public class SocketManager : MonoBehaviour
     }
     private void StartGameClient()
     {
-        SceneManager.LoadScene("SampleScene"); // Change to actual next scene later
+        SceneManager.LoadScene(sceneToLoad);
     }
 
     [Serializable]
