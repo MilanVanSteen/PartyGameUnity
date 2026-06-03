@@ -45,7 +45,6 @@ public class Player : MonoBehaviour
 
     public void MoveSteps(int steps)
     {
-        Debug.Log("PLayer 1 Current game phase: " + BoardManager.Instance.currentPhase);
         if (PlayerState.isMoving) return;
 
         // Added Steps powerup handling
@@ -55,7 +54,6 @@ public class Player : MonoBehaviour
             PlayerState.addedStepsNextRoll = 0;
         }
 
-        Debug.Log($"Moving player {playerName} by {steps} steps");
         StartCoroutine(MoveRoutine(steps));
     }
     private IEnumerator MoveRoutine(int steps)
@@ -68,7 +66,7 @@ public class Player : MonoBehaviour
         {
             if (currentTile.neighbors.Count == 0) 
             {
-                Debug.Log("No neighbors, stopping movement safely.");
+                Debug.LogWarning("No neighbors, stopping movement safely.");
 
                 yield return HandleTileEffect();
 
@@ -110,17 +108,14 @@ public class Player : MonoBehaviour
         switch (currentTile.tileType)
         {
             case TileType.Normal:
-                Debug.Log("Nothing happened");
                 break;
 
             case TileType.Ladder:
-                Debug.Log(playerName + " landed on ladder tile, go forward");
                 yield return MoveToTile(currentTile.targetTile);
                 currentTile = currentTile.targetTile;
                 break;
 
             case TileType.Snake:
-                Debug.Log(playerName + " landed on snake tile, go back");
                 yield return MoveToTile(currentTile.targetTile);
                 currentTile = currentTile.targetTile;
                 break;
@@ -128,16 +123,13 @@ public class Player : MonoBehaviour
             case TileType.Powerup:
                 PowerupType randomPowerup = GetRandomPowerup();
                 PlayerState.inventory.Add(randomPowerup);
-                Debug.Log(playerName + " received powerup: " + randomPowerup);
                 break;
 
             case TileType.Stuck:
-                Debug.Log(playerName + " stuck next turn");
                 PlayerState.stuck = true;
                 break;
 
             case TileType.Finish:
-                Debug.Log(playerName + " finished!");
                 BoardManager.Instance.HandleFinish(this);
 
                 PlayerState.isMoving = false;

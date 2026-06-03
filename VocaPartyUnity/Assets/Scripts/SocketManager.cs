@@ -221,6 +221,7 @@ public class SocketManager : MonoBehaviour
 
         Debug.Log("SocketManager: All dice rolls finished, moving players...");
 
+        BoardManager.Instance.movementPhaseLocked = true;
         BoardManager.Instance.ResetMovementCounter();
         if (BoardManager.Instance.currentPhase == GamePhase.DiceRoll)
         {
@@ -251,6 +252,7 @@ public class SocketManager : MonoBehaviour
                 }
             }
         });
+        BoardManager.Instance.movementPhaseLocked = false;
     }
 
     public void SendPowerUpInventory(string playerId, List<PowerupType> inventory)
