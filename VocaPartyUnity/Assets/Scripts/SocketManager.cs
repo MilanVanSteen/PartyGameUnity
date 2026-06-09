@@ -28,6 +28,15 @@ public class SocketManager : MonoBehaviour
     }
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        if (scene.name == "LobbyScene")
+        {
+            Debug.Log("Lobby loaded → creating fresh room");
+
+            lobbyManager = FindFirstObjectByType<LobbyManager>();
+
+            CreateLobby();
+        }
+        
         if (scene.name == sceneToLoad) // Only initialize board on the actual game scene
         {
             Debug.Log("Scene loaded, initializing board...");
@@ -68,8 +77,8 @@ public class SocketManager : MonoBehaviour
         socket.Connect();
         socket.OnConnected += (sender, e) =>
         {
-            Debug.Log("Unity connected! Creating room...");
-            socket.Emit("CREATE_ROOM");
+            Debug.Log("Unity connected!");
+            CreateLobby();
         };
 
         // Debug
@@ -87,6 +96,14 @@ public class SocketManager : MonoBehaviour
         {
             Debug.Log("SocketManager: Reconnected!");
         };
+    }
+    public void CreateLobby()
+    {
+        if (socket != null && socket.Connected)
+        {
+            Debug.Log("SocketManager: Creating new lobby...");
+            socket.Emit("CREATE_ROOM");
+        }
     }
 
     [Serializable]
@@ -453,6 +470,43 @@ public class SocketManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        socket.Disconnect();
+        LeaveRoom();
+    }
+
+    public void LeaveRoom()
+    {
+        if (socket != null && socket.Connected)
+        {
+            socket.Emit("LEAVE_ROOM");
+            socket.Disconnect();
+            Debug.Log("SocketManager: Left room and disconnected.");
+        }
+        else
+        {
+            Debug.LogWarning("SocketManager: Socket not connected. Cannot leave room cleanly.");
+        }
+    }
+
+    public void ResetToNewLobby()
+    {
+        Debug.Log("SocketManager: Resetting to new lobby...");
+
+        // 1. Reset game data
+        GameData.CurrentPlayers = null;
+
+        // 2. Reset Board (if exists)
+        if (BoardManager.Instance != null)
+        {
+            BoardManager.Instance.currentPhase = GamePhase.DiceRoll;
+        }
+
+        // 3. Leave current socket session cleanly
+        if (socket != null && socket.Connected)
+        {
+            socket.Emit("LEAVE_ROOM");
+        }
+
+        // 4. Reload Lobby scene
+        SceneManager.LoadScene("LobbyScene");
     }
 }
