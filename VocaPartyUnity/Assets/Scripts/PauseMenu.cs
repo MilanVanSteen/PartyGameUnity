@@ -55,7 +55,7 @@ public class PauseMenu : MonoBehaviour
     public void QuitGame()
     {
         SocketManager.Instance.LeaveRoom();
-        
+
         Application.Quit();
 
     #if UNITY_EDITOR

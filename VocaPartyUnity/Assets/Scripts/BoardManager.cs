@@ -13,6 +13,7 @@ public class BoardManager : MonoBehaviour
 
     private List<Player> players = new();
     private Dictionary<string, Player> playerDict = new();
+    [SerializeField] private List<GameObject> animalPrefabs;
 
     private int playersMoving = 0;
     public bool movementPhaseLocked = false;
@@ -131,6 +132,7 @@ public class BoardManager : MonoBehaviour
     }
 
     // Spawn or find existing player by ID
+    private readonly Vector3 modelOffset = new(0f, -0.85f, 0f);
     public readonly Vector3 tileOffset = new(0, 0.5f, 0);
     private Player FindOrSpawnPlayer(WebPlayer wp, int index, Color color)
     {
@@ -140,9 +142,22 @@ public class BoardManager : MonoBehaviour
 
         GameObject go = Instantiate(playerPrefab, playerContainer);
         Player player = go.GetComponent<Player>();
-        player.Initialize(wp.id, color, index, wp.name);
 
-        // Optionally set starting tile
+        player.Initialize(wp.id, index, wp.name);
+
+        if (animalPrefabs != null && animalPrefabs.Count > 0)
+        {
+            int prefabIndex = index % animalPrefabs.Count;
+
+            GameObject model = Instantiate(
+                animalPrefabs[prefabIndex],
+                player.transform
+            );
+
+            model.transform.localPosition = modelOffset;
+            model.transform.localRotation = Quaternion.identity;
+        }
+
         player.currentTile = startingTile; 
         player.transform.position = player.currentTile.transform.position + tileOffset;
 

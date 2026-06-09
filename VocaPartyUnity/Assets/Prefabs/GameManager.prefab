@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 563107942601278223}
   - component: {fileID: 2967753464845285386}
   - component: {fileID: 3719001708986825302}
+  - component: {fileID: 494102860040563634}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -47,6 +48,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f2090133606844429d1c66b2ed27d0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SocketManager
+  sceneToLoad: PirateMap
 --- !u!114 &563107942601278223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59,6 +61,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 672bbd33da27e994985519c560040de1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BoardManager
+  playerPrefab: {fileID: 997154561038552860, guid: e39ac1ea959f6d04d9bcd8b749972fac, type: 3}
+  animalPrefabs:
+  - {fileID: 919132149155446097, guid: f21c6559f8d5af24c86439ca02a11bce, type: 3}
+  - {fileID: 919132149155446097, guid: 7831bb6054af97f4e8de0bd19b688148, type: 3}
+  - {fileID: 919132149155446097, guid: ce5cac76cf625d64aa85f257d1a84cdf, type: 3}
+  - {fileID: 919132149155446097, guid: 2a0d78e076b1d554292ca93d520b1fd3, type: 3}
+  - {fileID: 919132149155446097, guid: f790009aa7199a34eab0dd795771d4a9, type: 3}
+  - {fileID: 919132149155446097, guid: 24c95575898828b44a2b9eaf88df5e29, type: 3}
+  - {fileID: 919132149155446097, guid: c16eb96b5656d5d4a85f55b1b8c72a92, type: 3}
+  - {fileID: 919132149155446097, guid: 0fa560e3d6761ec4b862797234d51fec, type: 3}
+  - {fileID: 919132149155446097, guid: 5d5edf886ec1ecc49b1217a71f9fe1e2, type: 3}
+  - {fileID: 919132149155446097, guid: f01c75ad1379ac1438f1e5420f14a226, type: 3}
+  - {fileID: 919132149155446097, guid: dbd9cd23968c33d4fb49070b52561ad3, type: 3}
+  - {fileID: 919132149155446097, guid: cf10f3feadf04c746a2c852b253bcc67, type: 3}
+  - {fileID: 919132149155446097, guid: 86f3caa5b66034c4ca54b4c236324c2a, type: 3}
+  - {fileID: 919132149155446097, guid: 4fc07fee77370864c94969af12bee197, type: 3}
+  - {fileID: 919132149155446097, guid: ba0730e6445744b46a06a7235bb34966, type: 3}
+  - {fileID: 919132149155446097, guid: b434a5f08b0d4864eac4a469fb78f793, type: 3}
+  - {fileID: 919132149155446097, guid: dd5ec6c7babb9fc448dea0a33543680d, type: 3}
+  - {fileID: 919132149155446097, guid: 14be6acb3bcf9f84a91e5d77f5517e8a, type: 3}
+  - {fileID: 919132149155446097, guid: 5d46555c45eb9734394d969b7981a577, type: 3}
+  - {fileID: 919132149155446097, guid: 20247a2a2ef3422419605e7eb7916e10, type: 3}
+  - {fileID: 919132149155446097, guid: 048175a9da9615c4799be6f4630583d2, type: 3}
+  - {fileID: 919132149155446097, guid: c4f80865b29dc194a9c8caa2186d1ffa, type: 3}
+  - {fileID: 919132149155446097, guid: d21abd18ec2cec24885f1f1735ef15e8, type: 3}
+  - {fileID: 919132149155446097, guid: 490f31d87ca14244e96760be18faaadf, type: 3}
+  movementPhaseLocked: 0
+  currentPhase: 0
+  powerUpPlayers: []
+  minigamePhaseDuration: 30
 --- !u!114 &2967753464845285386
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -83,3 +115,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 728495974942db243b11e08d6740b9df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainThreadDispatcher
+--- !u!114 &494102860040563634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2336421068778731596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57ec06d6951dfb54bb7c27908d1a2dae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MinigameManager

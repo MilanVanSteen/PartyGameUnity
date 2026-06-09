@@ -37,4 +37,9 @@ public class LobbyManager : MonoBehaviour
             }
         }
     }
+
+    public void OnStartButton()
+    {
+        SocketManager.Instance.StartGame();
+    }
 }

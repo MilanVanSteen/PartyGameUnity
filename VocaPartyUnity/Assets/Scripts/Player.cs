@@ -6,7 +6,6 @@ public class Player : MonoBehaviour
     public string playerName;
     public string playerId;
 
-    public Color playerColor = Color.white;
     private Renderer rend;
 
     public Tile currentTile;
@@ -18,14 +17,10 @@ public class Player : MonoBehaviour
         rend = GetComponentInChildren<Renderer>();
     }
 
-    public void Initialize(string id, Color color, int playerIndex, string name)
+    public void Initialize(string id, int playerIndex, string name)
     {
         playerId = id;
-        playerColor = color;
         PlayerState.playerIndex = playerIndex;
-
-        if (rend != null)
-            rend.material.color = playerColor;
 
         gameObject.name = $"Player_{playerIndex}";
         playerName = name;

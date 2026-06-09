@@ -195,6 +195,7 @@ public class SocketManager : MonoBehaviour
     }
     private void StartGameClient()
     {
+        BoardManager.Instance.currentPhase = GamePhase.WaitingForRoll; // idk if this works
         SceneManager.LoadScene(sceneToLoad);
     }
 
