@@ -1,6 +1,6 @@
 public enum GamePhase
 {
-    WaitingForRoll, // DiceTester
+    WaitingForRoll,
     DiceRoll,
     Movement,
     Powerup,

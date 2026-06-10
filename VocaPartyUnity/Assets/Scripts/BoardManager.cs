@@ -428,7 +428,7 @@ public class BoardManager : MonoBehaviour
 
     public void StartNextTurn()
     {
-        currentPhase = GamePhase.WaitingForRoll; //Later goes automatically
+        currentPhase = GamePhase.WaitingForRoll;
     }
 
     public void HandleFinish(Player player)
