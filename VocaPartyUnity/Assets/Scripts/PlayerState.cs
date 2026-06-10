@@ -15,12 +15,13 @@ public class PlayerState : MonoBehaviour
     public bool canMove = true;
 
     // Called at the start of the player's turn
-    public bool CanPlayTurn()
+    public bool CanPlayTurn(string playerId)
     {
         if(stuck)
         {
             Debug.Log(gameObject.name + " is stuck and skips a turn!");
             stuck = false; // clear the stuck status AFTER skipping
+            SocketManager.Instance.ShowPlayerStuck(playerId, false); // Notify website that player is no longer stuck
             return false;
         }
         return true;

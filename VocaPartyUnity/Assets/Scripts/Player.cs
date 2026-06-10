@@ -122,6 +122,7 @@ public class Player : MonoBehaviour
 
             case TileType.Stuck:
                 PlayerState.stuck = true;
+                SocketManager.Instance.ShowPlayerStuck(playerId, true); // Notify website that player is stuck
                 break;
 
             case TileType.Finish:

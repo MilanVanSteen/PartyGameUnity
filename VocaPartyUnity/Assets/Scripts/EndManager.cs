@@ -16,6 +16,7 @@ public class EndManager : MonoBehaviour
 
     public void NewLobby()
     {
+        Debug.Log("NewLobby called");
         if (SocketManager.Instance != null)
         {
             SocketManager.Instance.ResetToNewLobby();

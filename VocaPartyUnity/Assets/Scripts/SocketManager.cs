@@ -253,7 +253,7 @@ public class SocketManager : MonoBehaviour
             {
                 if (BoardManager.Instance.TryGetPlayer(move.playerId, out Player player))
                 {
-                    if(player.PlayerState.canMove && player.PlayerState.CanPlayTurn())
+                    if(player.PlayerState.canMove && player.PlayerState.CanPlayTurn(player.playerId))
                     {
                         BoardManager.Instance.RegisterMovingPlayer();
 
@@ -272,6 +272,13 @@ public class SocketManager : MonoBehaviour
             }
         });
         BoardManager.Instance.movementPhaseLocked = false;
+    }
+    public void ShowPlayerStuck(string playerId, bool isStuck)
+    {
+        if (socket != null && socket.Connected)
+        {
+            socket.Emit("SHOW_PLAYER_STUCK", new { playerId, isStuck });
+        }
     }
 
     public void SendPowerUpInventory(string playerId, List<PowerupType> inventory)

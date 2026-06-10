@@ -7125,7 +7125,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 801589080768325583, guid: 687f3797db871904b985e83656c0d3f2, type: 3}
       propertyPath: tileType
-      value: 0
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 801589080768325583, guid: 687f3797db871904b985e83656c0d3f2, type: 3}
       propertyPath: targetTile
@@ -9284,7 +9284,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 801589080768325583, guid: 687f3797db871904b985e83656c0d3f2, type: 3}
       propertyPath: tileType
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 801589080768325583, guid: 687f3797db871904b985e83656c0d3f2, type: 3}
       propertyPath: neighbors.Array.size
