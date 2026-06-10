@@ -450,4 +450,41 @@ public class BoardManager : MonoBehaviour
     {
         return currentPhase != GamePhase.GameOver;
     }
+
+    public void RemovePlayer(string playerId)
+    {
+        if (playerDict.TryGetValue(playerId, out Player player))
+        {
+            players.Remove(player);
+            playerDict.Remove(playerId);
+
+            if (powerUpPlayers != null)
+                powerUpPlayers.Remove(player);
+        }
+
+        Debug.Log($"BoardManager: Removed player {playerId}");
+
+        RebuildTurnOrder();
+    }
+
+    private void RebuildTurnOrder()
+    {
+        // Safety reset for movement system
+        playersMoving = 0;
+
+        // If someone left during movement phase, ensure no deadlocks
+        if (currentPhase == GamePhase.Movement)
+        {
+            foreach (var p in players)
+            {
+                if (p.PlayerState.canMove)
+                    playersMoving++;
+            }
+
+            if (playersMoving == 0)
+            {
+                AllPlayersFinished();
+            }
+        }
+    }
 }

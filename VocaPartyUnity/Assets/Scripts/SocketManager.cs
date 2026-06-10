@@ -72,6 +72,7 @@ public class SocketManager : MonoBehaviour
         socket.On("MINIGAME_RESULTS", OnMinigameResults);
         socket.On("MINIGAME_PHASE_FORCE_END", OnEndMinigamePhase);
         socket.On("GAME_ENDED", OnGameEnded);
+        socket.On("PLAYER_LEFT", OnPlayerLeft);
     
         // Connect
         socket.Connect();
@@ -469,6 +470,35 @@ public class SocketManager : MonoBehaviour
         });
     }
 
+    [Serializable]
+    public class PlayerLeftData
+    {
+        public string playerId;
+        public WebPlayer[] players;
+    }
+
+    private void OnPlayerLeft(SocketIOResponse response)
+    {
+        PlayerLeftData data = JsonConvert.DeserializeObject<PlayerLeftData>(response.GetValue().ToString());
+
+        MainThreadDispatcher.RunOnMainThread(() =>
+        {
+            Debug.Log($"SocketManager: Player left: {data.playerId}");
+
+            if (lobbyManager != null)
+            {
+                lobbyManager.RemovePlayer(data.playerId);
+                lobbyManager.UpdatePlayers(new PlayerList { players = data.players }); // Player visually not being removed, which is fine for now
+            }
+
+            if (BoardManager.Instance != null)
+            {
+                BoardManager.Instance.RemovePlayer(data.playerId);
+            }
+            GameData.CurrentPlayers.players = data.players;
+        });
+    }
+
     private void OnApplicationQuit()
     {
         LeaveRoom();
@@ -478,7 +508,7 @@ public class SocketManager : MonoBehaviour
     {
         if (socket != null && socket.Connected)
         {
-            socket.Emit("LEAVE_ROOM");
+            socket.Emit("HOST_STOP_GAME");
             socket.Disconnect();
             Debug.Log("SocketManager: Left room and disconnected.");
         }
@@ -504,7 +534,7 @@ public class SocketManager : MonoBehaviour
         // 3. Leave current socket session cleanly
         if (socket != null && socket.Connected)
         {
-            socket.Emit("LEAVE_ROOM");
+            socket.Emit("HOST_STOP_GAME");
         }
 
         // 4. Reload Lobby scene

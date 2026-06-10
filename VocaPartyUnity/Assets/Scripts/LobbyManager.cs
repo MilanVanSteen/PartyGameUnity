@@ -42,4 +42,14 @@ public class LobbyManager : MonoBehaviour
     {
         SocketManager.Instance.StartGame();
     }
+
+    public void RemovePlayer(string playerId)
+    {
+        if (playerEntries.TryGetValue(playerId, out GameObject entry))
+        {
+            Destroy(entry);
+            playerEntries.Remove(playerId);
+            Debug.Log("LobbyManager: Removed player UI " + playerId);
+        }
+    }
 }
