@@ -492,17 +492,22 @@ public class SocketManager : MonoBehaviour
         {
             Debug.Log($"SocketManager: Player left: {data.playerId}");
 
+            Debug.Log($"SocketManager: data.players: {data.players} and length: {data.players.Length}");
+
             if (lobbyManager != null)
             {
                 lobbyManager.RemovePlayer(data.playerId);
                 lobbyManager.UpdatePlayers(new PlayerList { players = data.players }); // Player visually not being removed, which is fine for now
             }
 
+            Debug.Log($"SocketManager: reached end of player left handling");
+
             if (BoardManager.Instance != null)
             {
                 BoardManager.Instance.RemovePlayer(data.playerId);
             }
-            GameData.CurrentPlayers.players = data.players;
+            
+            GameData.CurrentPlayers = new PlayerList { players = data.players };
         });
     }
 

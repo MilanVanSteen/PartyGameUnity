@@ -40,7 +40,10 @@ public class LobbyManager : MonoBehaviour
 
     public void OnStartButton()
     {
-        SocketManager.Instance.StartGame();
+        if(GameData.CurrentPlayers != null)
+        {
+            SocketManager.Instance.StartGame();
+        }
     }
 
     public void RemovePlayer(string playerId)
