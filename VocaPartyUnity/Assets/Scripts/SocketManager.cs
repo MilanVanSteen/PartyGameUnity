@@ -144,7 +144,7 @@ public class SocketManager : MonoBehaviour
         // Playername null handling
         foreach (var p in data.players)
         {
-            if (string.IsNullOrEmpty(p.name)) p.name = "HOST";
+            if (string.IsNullOrEmpty(p.name)) p.name = "Player" + p.id.Substring(0, 5); // fallback to "Player XXXXX" if name is null or empty
         }
 
         // Player error handling
