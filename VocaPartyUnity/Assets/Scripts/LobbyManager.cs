@@ -40,9 +40,13 @@ public class LobbyManager : MonoBehaviour
 
     public void OnStartButton()
     {
-        if(GameData.CurrentPlayers != null)
+        if(GameData.CurrentPlayers != null && GameData.CurrentPlayers.players.Length > 0)
         {
             SocketManager.Instance.StartGame();
+        }
+        else
+        {
+            Debug.LogWarning("LobbyManager: Cannot start game, no players in lobby!");
         }
     }
 

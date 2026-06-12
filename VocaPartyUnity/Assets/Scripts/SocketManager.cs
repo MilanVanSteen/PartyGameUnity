@@ -140,6 +140,7 @@ public class SocketManager : MonoBehaviour
     {
         string rawJson = response.GetValue().ToString();
         PlayerList data = JsonConvert.DeserializeObject<PlayerList>(rawJson);
+        GameData.CurrentPlayers = data;
 
         // Playername null handling
         foreach (var p in data.players)
