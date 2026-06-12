@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -6,6 +7,7 @@ public class Player : MonoBehaviour
     public string playerName;
     public string playerId;
 
+    [SerializeField] private TextMeshPro nameTag;
     private Renderer rend;
 
     public Tile currentTile;
@@ -22,8 +24,11 @@ public class Player : MonoBehaviour
         playerId = id;
         PlayerState.playerIndex = playerIndex;
 
-        gameObject.name = $"Player_{playerIndex}";
+        gameObject.name = $"Player_{playerIndex} ({name})";
         playerName = name;
+
+        if (nameTag != null)
+            nameTag.text = playerName;
     }
 
     public IEnumerator MoveStepsCoroutine(int steps)
@@ -83,7 +88,7 @@ public class Player : MonoBehaviour
         BoardManager.Instance.PlayerFinishedMoving();
     }
 
-    private IEnumerator MoveToTile(Tile tile)
+    public IEnumerator MoveToTile(Tile tile)
     {
         Vector3 start = transform.position;
         Vector3 end = tile.transform.position + BoardManager.Instance.tileOffset;

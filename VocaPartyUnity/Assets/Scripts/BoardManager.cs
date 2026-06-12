@@ -298,13 +298,14 @@ public class BoardManager : MonoBehaviour
                         Debug.Log("Target is shielded! Powerup blocked.");
                         break;
                     }
-                    Tile tile = target.currentTile;
+                    
+                    Tile current = target.currentTile;
                     for (int i = 0; i < 2; i++)
                     {
-                        if (tile.neighbors.Count > 0) tile = tile.neighbors[0]; // move backward along first neighbor for now
+                        current = current.neighbors[0];
+                        yield return target.StartCoroutine(target.MoveToTile(current));
                     }
-                    target.transform.position = tile.transform.position;
-                    target.currentTile = tile;
+                    target.currentTile = current;
 
                     Debug.Log($"{player.PlayerState.playerIndex} sent {target.PlayerState.playerIndex} back 2 tiles");
                 }
