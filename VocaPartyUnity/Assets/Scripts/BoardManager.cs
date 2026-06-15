@@ -363,6 +363,9 @@ public class BoardManager : MonoBehaviour
         currentPhase = GamePhase.Minigame;
         minigameEnding = false;
 
+        // Hide previous minigame scores
+        MinigameScoreUI.Instance.Hide();
+
         MinigameType selectedMinigame = GetRandomMinigame();
 
         switch (selectedMinigame)

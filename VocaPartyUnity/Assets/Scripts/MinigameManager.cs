@@ -36,11 +36,6 @@ public class MinigameManager : MonoBehaviour
     {
         Debug.Log("MinigameManager: Minigame finished!");
 
-        foreach (var kvp in scores)
-        {
-            Debug.Log($"MinigameManager: Player {kvp.Key} score: {kvp.Value}");
-        }
-
         // 1. Reward phase
         foreach (var winnerId in winners)
         {
@@ -48,12 +43,13 @@ public class MinigameManager : MonoBehaviour
             {
                 PowerupType reward = player.GetRandomPowerup();
                 player.PlayerState.inventory.Add(reward);
-
-                Debug.Log($"MinigameManager: {player.playerId} WON → got {reward}");
             }
         }
+        
+        // 2. Setting the UI
+        MinigameScoreUI.Instance.ShowResults(winners, scores);
 
-        // 2. Continue next turn
+        // 3. Continue next turn
         Debug.Log("MinigameManager: Minigame phase ended!");
         BoardManager.Instance.StartNextTurn();
     }
