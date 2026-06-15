@@ -368,11 +368,11 @@ public class BoardManager : MonoBehaviour
         switch (selectedMinigame)
         {
             case MinigameType.WordRushNL:
-                minigamePhaseDuration = 30f;
+                minigamePhaseDuration = 45f;
                 break;
 
             case MinigameType.WordRushEN:
-                minigamePhaseDuration = 30f;
+                minigamePhaseDuration = 45f;
                 break;
 
             case MinigameType.MemoryMatch:
@@ -380,15 +380,15 @@ public class BoardManager : MonoBehaviour
                 break;
 
             case MinigameType.WordSnake:
-                minigamePhaseDuration = 30f;
+                minigamePhaseDuration = 45f;
                 break;
             
             case MinigameType.RocketFuel:
-                minigamePhaseDuration = 25f;
+                minigamePhaseDuration = 30f;
                 break;
             
             default:
-                minigamePhaseDuration = 30f;
+                minigamePhaseDuration = 45f;
                 break;
         }
         minigameTimer = minigamePhaseDuration;
