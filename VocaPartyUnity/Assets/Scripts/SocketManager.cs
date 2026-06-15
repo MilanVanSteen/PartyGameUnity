@@ -182,7 +182,8 @@ public class SocketManager : MonoBehaviour
         socket.Emit("START_GAME", new { });
     }
 
-    public string sceneToLoad; // Change this to actual game map choice later
+    private string sceneToLoad;
+    public string[] scenes = {}; // Map vote later?
     private void OnGameStarted(SocketIOResponse response)
     {
         // Save playerList
@@ -197,7 +198,9 @@ public class SocketManager : MonoBehaviour
     }
     private void StartGameClient()
     {
-        BoardManager.Instance.currentPhase = GamePhase.WaitingForRoll; // idk if this works
+        sceneToLoad = scenes[UnityEngine.Random.Range(0, scenes.Length)];
+
+        BoardManager.Instance.currentPhase = GamePhase.WaitingForRoll;
         SceneManager.LoadScene(sceneToLoad);
     }
 
