@@ -23,7 +23,7 @@ public class BoardManager : MonoBehaviour
 
     // Timer powerup phase
     private float powerupTimer = 0f;
-    public readonly float powerupPhaseDuration = 10f;
+    public readonly float powerupPhaseDuration = 15f;
 
     public List<Player> powerUpPlayers;
 
