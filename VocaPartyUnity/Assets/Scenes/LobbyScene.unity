@@ -1459,18 +1459,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameManager
       objectReference: {fileID: 0}
-    - target: {fileID: 4460117314787677177, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
-      propertyPath: scenes.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4460117314787677177, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
-      propertyPath: 'scenes.Array.data[0]'
-      value: PirateMap
-      objectReference: {fileID: 0}
-    - target: {fileID: 4460117314787677177, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
-      propertyPath: 'scenes.Array.data[1]'
-      value: PirateMap2
-      objectReference: {fileID: 0}
     - target: {fileID: 5313217704320624773, guid: 04e153210457e2447a335b86d07f82e7, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.34966
