@@ -5,5 +5,5 @@ public enum MinigameType
     MemoryMatch,
     WordSnake,
     RocketFuel,
-    TrapChoice,
+    //TrapChoice,
 }
